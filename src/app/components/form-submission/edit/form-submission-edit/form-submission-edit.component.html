@@ -74,17 +74,24 @@
       <label class="block text-gray-700 text-sm font-bold mb-2" for="pokemon">
         Pokemon
       </label>
-      <div class="flex gap-2 items-stretch">
-        <div class="max-w-sm rounded overflow-hidden shadow-lg h-min relative" *ngFor="let pokemon of selectedPokemons">
-            <button (click)="removePokemon($event,pokemon)" class="absolute top-0 right-0 p-2 bg-white rounded-full hover:bg-red-300">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            </button>
-          <img class="w-40 h-40" [src]="pokemon.sprites.front_default" alt="Pokemon Image">
-          <div class="px-6 py-4">
-            <div class="font-bold text-xl mb-2">{{ pokemon.name | titlecase}} </div>
-          </div>
+      <div *ngFor="let data of displayedPokemons;" class= "items-stretch bg-white rounded-md shadow-lg">
+        <p class="text-lg font-semibold p-4">Quantity: {{ data.quantity }}</p>
+        <div class="grid grid-cols-3 gap-4 p-4">
+          <div *ngFor="let pokemon of data.pokemon" >
+            <div class="max-w-sm rounded overflow-hidden shadow-lg h-min relative">
+              <button (click)="removePokemon($event,pokemon)"
+                class="absolute top-0 right-0 p-2 bg-white rounded-full hover:bg-red-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <img class="w-40 h-40" [src]="pokemon.sprites.front_default" alt="Pokemon Image">
+              <div class="px-6 py-4">
+                <div class="font-bold text-xl mb-2">{{ pokemon.name | titlecase}} </div>
+              </div>
+            </div>
+        </div>
         </div>
       </div>
     </div>

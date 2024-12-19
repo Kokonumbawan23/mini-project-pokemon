@@ -1,3 +1,4 @@
+import { map } from 'rxjs';
 import { RealtimeDatabaseService } from './../../../../services/realtime-database.service';
 import { PokemonService } from './../../../../services/pokemon.service';
 import { Component, OnInit } from "@angular/core";
@@ -13,10 +14,11 @@ import { CanComponentDeactivate } from '../../../../guards/form.guard';
 })
 export default class FormSubmissionEditComponent implements OnInit, CanComponentDeactivate{
   fetchedData: any;
-  selectedPokemons: any[] = [];
   isFormSuccess: boolean = false;
   showModal: boolean = false;
   dirty: boolean = false;
+  pokemonList: any[] = [];
+  displayedPokemons: any[] = [];
 
   buyForm: FormGroup = new FormGroup({
     firstName: new FormControl('', [Validators.required]),
@@ -38,18 +40,32 @@ export default class FormSubmissionEditComponent implements OnInit, CanComponent
       const data = await this.dbService.getFormSubmission(id);
       this.fetchedData = data;
       this.buyForm.patchValue(data);
-
-      console.log(data);
     }
 
-    this.selectedPokemons = await Promise.all(this.fetchedData.pokemonToBuy.map(async (pokemon: any) => {
-      const details = await this.pokemonService.getPokemonDetailsByName(pokemon);
-      return details;
-    }));
+
+    this.pokemonList= await Promise.all(
+      this.fetchedData.pokemonToBuy.map(async (data: any) => {
+
+        const pokemonData = await Promise.all(data.pokemon.map(async (pokemon: any) => {
+          return await this.pokemonService.getPokemonDetailsByName(pokemon);
+         }))
+        data = {pokemon: pokemonData, quantity: data.quantity};
+
+        const wrapper = [];
+        // push to displayedPokemons based on quantity
+        for(let i=0; i<data.quantity / data.pokemon.length; i++){
+          // push to wrapper and make it into one array
+          wrapper.push(...data.pokemon);
+        }
+        this.displayedPokemons.push({pokemon: wrapper, quantity: data.quantity});
+        return data;
+      })
+    );
 
     this.buyForm.valueChanges.subscribe(() => {
       this.dirty = true;
     });
+    console.log(this.displayedPokemons);
   }
 
   onSubmit() {
@@ -64,7 +80,7 @@ export default class FormSubmissionEditComponent implements OnInit, CanComponent
       email: this.buyForm.controls['email'].value,
       phone: this.buyForm.controls['phone'].value,
       address: this.buyForm.controls['address'].value,
-      pokemonToBuy: this.selectedPokemons.map(pokemon => pokemon.name)
+      // pokemonToBuy: this.selectedPokemons.map(pokemon => pokemon.name)
     }
 
     try{
@@ -84,7 +100,7 @@ export default class FormSubmissionEditComponent implements OnInit, CanComponent
 
   removePokemon(e: Event,index: number){
     e.preventDefault();
-    this.selectedPokemons.splice(index, 1);
+    // this.selectedPokemons.splice(index, 1);
   }
 
   closeSuccessModal(e : Event){

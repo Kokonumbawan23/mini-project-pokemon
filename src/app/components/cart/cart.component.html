@@ -17,6 +17,9 @@
       <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-full" (click)="clearCart()" *ngIf="(cartItem$ | async)?.length">
         Clear Cart
       </button>
+      <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-4 rounded-full" routerLink="/checkout"  *ngIf="(cartItem$ | async)?.length">
+        Checkout
+      </button>
     </div>
 
   </div>

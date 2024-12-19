@@ -5,7 +5,7 @@ import axios from "axios";
   providedIn: "root"
 })
 export class PokemonService {
-  private apiUrl: String = "https://pokeapi.co/api/v2/";
+  private apiUrl: String = "https://pokeapi.co/api/v2";
 
   constructor() {
     console.log("PokemonService constructor called");

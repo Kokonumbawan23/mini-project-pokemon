@@ -1,5 +1,6 @@
-<div class="h-screen mx-auto p-4 bg-white shadow-md rounded overflow-scroll">
-  <form class="my-8" [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+<div class="h-screen mx-auto ps-10 pe-8 bg-white rounded overflow-scroll">
+  <h1 class="text-2xl font-bold my-8">Checkout</h1>
+  <form class="my-8" [formGroup]="checkoutForm" (ngSubmit)="submitOrder()">
     <div class="mb-4">
       <label class="block text-gray-700 text-sm font-bold mb-2" for="firstName">
         First Name
@@ -70,35 +71,29 @@
         Address is required
     </div>
 
-    <div class="mb-4 flex gap-2">
-      <div *ngFor="let selection of pokemonSelections.controls; let i = index" [formGroup]="selection">
-        <div class="max-w-sm rounded overflow-hidden shadow-lg h-min">
-          <div class="px-6 py-4">
-            <div class="font-bold text-xl mb-2">{{ cartItems[i].pokemon | titlecase}} </div>
-            <div class="font-bold text-xl mb-2">Quantity: {{ cartItems[i].quantity }}</div>
-          </div>
+    <div class="mb-4 w-full">
+      <div class="rounded overflow-hidden shadow-lg mb-4 border border-gray-600"
+        *ngFor="let selection of pokemonSelections.controls; let i = index" [formGroup]="selection">
+        <div class="px-6 py-4">
+          <div class="font-bold text-xl mb-2">{{ cartItems[i].pokemon.name | titlecase}} </div>
+          <div class="font-bold text-xl mb-2">Quantity: {{ cartItems[i].quantity }}</div>
         </div>
-        <label for="buyOptions" class="block text-gray-700 text-sm font-bold mb-2">Buy Options</label>
-        <select formControlName="buyOption" (change)="updateDisplayedPokemons(i)" name="buyOption" id="buyOption"
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-          <option value="" selected>Select Buy Options</option>
-          <option value="1">Only this pokemon</option>
-          <option value="all">All of the evolutions</option>
-        </select>
-        <p *ngIf="checkoutForm.controls['buyOptions'].invalid && checkoutForm.controls['buyOptions'].touched && checkoutForm.controls['buyOptions'].value === ''"
+        <div class="px-6 py-4">
+          <label for="buyOptions" class="block text-gray-700 text-sm font-bold mb-2">Buy Options</label>
+          <select formControlName="buyOption" (change)="updateDisplayedPokemons(i)" name="buyOption" id="buyOption"
+            class="shadow appearance-none border rounded w-1/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <option value="" selected>Select Buy Options</option>
+            <option value="1">Only this pokemon</option>
+            <option value="all">All of the evolutions</option>
+          </select>
+        </div>
+        <p *ngIf="selection.controls['buyOption'].invalid && selection.controls['buyOption'].touched"
           class="text-red-500 text-xs italic">
           Buy Options is required
         </p>
         <div class="grid grid-cols-3 gap-4">
-          <div
-            *ngFor="let pokemon of displayedPokemons[i]"
-            class="p-4 bg-gray-100 border border-gray-300 rounded shadow"
-          >
-            <img
-              [src]="pokemon.sprites.front_default"
-              alt="{{ pokemon.name }}"
-              class="object-contain w-full h-24"
-            />
+          <div *ngFor="let pokemon of displayedPokemons[i]" class="p-4 bg-gray-100 rounded shadow">
+            <img [src]="pokemon.sprites.front_default" alt="{{ pokemon.name }}" class="object-contain w-full h-24" />
             <h4 class="mt-2 font-semibold text-center">
               {{ pokemon.name | uppercase }}
             </h4>
@@ -108,9 +103,9 @@
     </div>
 
     <div class="flex items-center justify-center">
-      <button (click)="onSubmit()"
+      <button
         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        type="button">
+        type="submit">
         Submit
       </button>
     </div>
@@ -122,13 +117,11 @@
           <h2 class="text-2xl font-bold mb-4">Done</h2>
           <p class="mb-4">Form submitted</p>
         </div>
-        <button (click)="closeModal()"
+        <button (click)="closeModal($event)"
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
           Close
         </button>
       </div>
     </div>
-
-
   </form>
 </div>

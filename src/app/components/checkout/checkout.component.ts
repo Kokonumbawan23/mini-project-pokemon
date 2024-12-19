@@ -7,6 +7,7 @@ import { Store } from '@ngrx/store';
 import { CartItem } from '../../state/cart/cart.state';
 import { Observable, map } from 'rxjs';
 import { clearCart } from '../../state/cart/cart.action';
+import { selectCartItem } from '../../state/cart/cart.selector';
 
 @Component({
   selector: 'app-checkout',
@@ -31,7 +32,7 @@ export class CheckoutComponent  implements OnInit {
     private store: Store<{ cart: CartItem[] }>,
 
   ) {
-    this.cartItems$ = this.store.select('cart');
+    this.cartItems$ = this.store.select(selectCartItem);
     this.checkoutForm = this.fb.group({
       firstName: new FormControl('', [Validators.required]),
       lastName: new FormControl('', [Validators.required]),
@@ -60,18 +61,25 @@ export class CheckoutComponent  implements OnInit {
       this.cartItems = items;
       await this.initEvolutionsOpt();
     } );
+
   }
 
   private async initEvolutionsOpt(): Promise<void>{
-
       for (const item of this.cartItems) {
         try {
           const species = await this.pokemonService.getPokemonSpecies(item.pokemon.name);
           const evoUrl = species.evolution_chain.url;
-          const evolutions = await this.pokemonService.getEvolutions(evoUrl);
+          const evolution = await this.pokemonService.getEvolutions(evoUrl);
 
-          this.evolutionOptions[item.pokemon.name] = evolutions;
+          let current = evolution.chain;
+          const evolutionList = [];
+          while (current) {
+            const pokemon = await this.pokemonService.getPokemonDetailsByName(current.species.name);
+            evolutionList.push(pokemon);
+            current = current.evolves_to[0];
+          }
 
+          this.evolutionOptions[item.pokemon.name] = evolutionList;
           this.pokemonSelections.push(this.fb.group({
             buyOption: ['1', Validators.required],
             quantity: [
@@ -84,7 +92,7 @@ export class CheckoutComponent  implements OnInit {
           }
           this.displayedPokemons.push(replicatedPokemon);
         } catch (error) {
-          // console.error('Error getting evolutions:', error);
+          console.error('Error getting evolutions:', error);
         }
       };
 
@@ -120,7 +128,6 @@ export class CheckoutComponent  implements OnInit {
     }
 
     const formValues = this.checkoutForm.value;
-
     const pokemonToBuy = this.cartItems.map((item, index) => {
       const buyOption = this.pokemonSelections.at(index).get('buyOption')?.value;
       const selectedPokemon = buyOption === '1' ? [item.pokemon.name]
@@ -136,6 +143,7 @@ export class CheckoutComponent  implements OnInit {
       pokemonToBuy,
     }
 
+
     try {
       await this.dbService.saveFormSubmission(orderData);
       this.formSubmitted = true;
@@ -146,7 +154,8 @@ export class CheckoutComponent  implements OnInit {
 
   }
 
-  closeModal(){
+  closeModal(e: Event){
+    e.preventDefault();
     this.formSubmitted = false;
   }
 }
