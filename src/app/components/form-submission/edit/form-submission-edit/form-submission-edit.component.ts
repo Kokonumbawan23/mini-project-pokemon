@@ -1,10 +1,9 @@
-import { map } from 'rxjs';
 import { RealtimeDatabaseService } from './../../../../services/realtime-database.service';
 import { PokemonService } from './../../../../services/pokemon.service';
-import { Component, Input, OnInit, Output } from "@angular/core";
-import { EventEmitter } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute } from '@angular/router';
+import { CanComponentDeactivate } from '../../../../guards/form.guard';
 
 @Component({
   selector: 'app-form-submission-edit',
@@ -12,11 +11,12 @@ import { ActivatedRoute } from '@angular/router';
   standalone: false
 
 })
-export default class FormSubmissionEditComponent implements OnInit{
+export default class FormSubmissionEditComponent implements OnInit, CanComponentDeactivate{
   fetchedData: any;
   selectedPokemons: any[] = [];
   isFormSuccess: boolean = false;
   showModal: boolean = false;
+  dirty: boolean = false;
 
   buyForm: FormGroup = new FormGroup({
     firstName: new FormControl('', [Validators.required]),
@@ -38,12 +38,18 @@ export default class FormSubmissionEditComponent implements OnInit{
       const data = await this.dbService.getFormSubmission(id);
       this.fetchedData = data;
       this.buyForm.patchValue(data);
+
+      console.log(data);
     }
 
     this.selectedPokemons = await Promise.all(this.fetchedData.pokemonToBuy.map(async (pokemon: any) => {
       const details = await this.pokemonService.getPokemonDetailsByName(pokemon);
       return details;
     }));
+
+    this.buyForm.valueChanges.subscribe(() => {
+      this.dirty = true;
+    });
   }
 
   onSubmit() {
@@ -86,5 +92,12 @@ export default class FormSubmissionEditComponent implements OnInit{
     this.showModal = !this.showModal;
     console.log(this.showModal);
   }
+
+  canDeactivate():boolean {
+    if(this.dirty){
+      return confirm('Are you sure you want to leave this page?');
+    }
+    return true;
+  };
 
 }

@@ -2,6 +2,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PokemonService } from './../../services/pokemon.service';
 import { Component, Input, OnInit } from '@angular/core';
 import { map } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { addCart } from '../../state/cart/cart.action';
 
 @Component({
   selector: 'app-pokemon-detail',
@@ -17,11 +19,13 @@ export class PokemonDetailComponent implements OnInit{
     species: any;
     evolutions: any[] = [];
     showForm: boolean = false;
+    isFormDirty: boolean = false;
 
     constructor(
     private pokemonService: PokemonService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private store:Store
     ) {}
 
     async ngOnInit() {
@@ -67,8 +71,23 @@ export class PokemonDetailComponent implements OnInit{
       this.showForm = true;
     }
 
+    addToCart(){
+      this.store.dispatch(addCart({pokemon: this.pokemon, quantity: 1}));
+    }
+
     closeFormEvent(status: boolean){
       this.showForm = status;
     }
+
+    receiveFormStates(eventValue: boolean){
+      this.isFormDirty = eventValue;
+    }
+
+    canDeactivate():boolean {
+      if(this.isFormDirty){
+        return confirm('Are you sure you want to leave this page?');
+      }
+      return true;
+    };
 
 }

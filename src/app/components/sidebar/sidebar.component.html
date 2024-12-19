@@ -1,0 +1,27 @@
+<div class="w-64 text-white">
+  <div class="p-4 flex gap-2 my-10">
+    <img src="pokemon-logo-png-1428.png" alt="Pokemon Logo">
+  </div>
+  <ul>
+    <li class="p-4 hover:bg-gray-700 text-lg mb-2" routerLink="/pokemon">
+      <span class="text-lg flex items-center">
+        <i class="fa-solid fa-list px-4 text-2xl"></i> Pokemon List</span>
+    </li>
+    <li class="p-4 hover:bg-gray-700 text-lg" routerLink="/form-submission">
+      <span class="text-lg flex items-center"><i class="fa-regular fa-file px-4 text-2xl"></i>Form Submission</span>
+    </li>
+    <li class="p-4 hover:bg-gray-700 text-lg" routerLink="/cart">
+      <div class="flex justify-between">
+        <span class="text-lg flex items-center gap-2"><i class="fa-solid fa-cart-shopping px-3 text-2xl"></i>Cart</span>
+      <span
+        class="bg-red-500 rounded-full p-1 w-9 h-9 text-center font-bold">{{ cartItemCount$ | async
+        }}</span>
+      </div>
+    </li>
+    <li class="p-4 hover:bg-gray-700 text-lg" (click)="logout()">
+      <span class="text-lg flex items-center"><i
+          class="fa-solid fa-arrow-right-from-bracket px-4 text-2xl"></i>Logout</span>
+    </li>
+
+  </ul>
+</div>

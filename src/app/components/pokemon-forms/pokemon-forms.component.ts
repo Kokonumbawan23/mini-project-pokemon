@@ -3,6 +3,7 @@ import { PokemonService } from './../../services/pokemon.service';
 import { Component, Input, OnInit, Output } from "@angular/core";
 import { EventEmitter } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
+import { CanComponentDeactivate } from '../../guards/form.guard';
 
 @Component({
   selector: 'app-pokemon-forms',
@@ -10,14 +11,16 @@ import { FormControl, FormGroup, Validators } from "@angular/forms";
   standalone: false
 
 })
-export default class PokemonFormsComponent implements OnInit{
+export default class PokemonFormsComponent implements OnInit, CanComponentDeactivate{
   @Input() isOpened: boolean = false;
   @Output() isOpenedChange = new EventEmitter<boolean>();
+  @Output() formStates = new EventEmitter<boolean>();
   @Input() evolutions: any[] = [];
   @Input() pokemon: any;
   selectedPokemons: any[] = [];
   isFormSuccess: boolean = false;
   showModal: boolean = false;
+  dirty: boolean = false;
 
   buyForm: FormGroup = new FormGroup({
     firstName: new FormControl('', [Validators.required]),
@@ -32,9 +35,13 @@ export default class PokemonFormsComponent implements OnInit{
   constructor(private pokemonService: PokemonService, private dbService:RealtimeDatabaseService) {}
 
   ngOnInit(): void {
-      console.log(this.evolutions);
-      console.log(this.pokemon);
+      this.buyForm.valueChanges.subscribe(() => {
+        this.dirty = true;
+        this.formStates.emit(this.dirty);
+      });
   }
+
+
 
   onSubmit() {
     if(this.buyForm.invalid){
@@ -87,5 +94,12 @@ export default class PokemonFormsComponent implements OnInit{
       });
     }
   }
+
+canDeactivate():boolean {
+  if(this.dirty){
+    return confirm('Are you sure you want to leave this page?');
+  }
+  return true;
+};
 
 }

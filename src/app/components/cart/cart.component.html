@@ -1,0 +1,23 @@
+<div class="container mx-auto min-h-screen p-4 ps-10 pe-8">
+  <h1 class="text-4xl font-bold my-8 text-gray-800">Shopping Cart</h1>
+  <div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="p-4">
+      <p class="text-center" *ngIf="(cartItem$ | async)?.length === 0">
+        Your Cart is Empty
+      </p>
+      <div class="bg-gray-100 p-4 rounded-lg mb-4 flex justify-between items-center" *ngFor="let item of cartItem$ | async">
+        <div class="p-4">
+          <h2 class="text-xl font-semibold">{{ item.pokemon.name | titlecase }}</h2>
+          <p>Quantity: {{ item.quantity }}</p>
+        </div>
+        <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-4 rounded-full" (click)="removeItem(item.pokemon.name)">
+          Remove
+        </button>
+      </div>
+      <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-4 rounded-full" (click)="clearCart()" *ngIf="(cartItem$ | async)?.length">
+        Clear Cart
+      </button>
+    </div>
+
+  </div>
+</div>

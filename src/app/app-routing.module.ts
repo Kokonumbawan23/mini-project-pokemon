@@ -1,33 +1,44 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { CvPageComponent } from './cv/cv-page/cv-page.component';
-import { PokemonListComponent } from './components/pokemon-list/pokemon-list-component';
-import { PokemonDetailComponent } from './components/pokemon-detail/pokemon-detail.component';
-import FormSubmissionComponent from './components/form-submission/form-submission.component';
-import FormSubmissionEditComponent from './components/form-submission/edit/form-submission-edit/form-submission-edit.component';
-
+import { HomeLayoutComponent } from './components/pokemon-layout/pokemon-layout.component';
+import { AuthComponent } from './components/auth/auth.component';
+import { AuthGuard } from './guards/auth.guard';
+import { CartComponent } from './components/cart/cart.component';
+import { CheckoutComponent } from './components/checkout/checkout.component';
 const routes: Routes = [
   {
-    path: 'pokemon-list',
-    pathMatch: 'full',
-    component: PokemonListComponent
+    path: 'auth',
+    component: AuthComponent
   },
   {
-    path: 'pokemon-detail/:name',
-    component: PokemonDetailComponent,
+    path: '',
+    component: HomeLayoutComponent,
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: 'cart',
+        component: CartComponent
+      },
+      {
+        path: 'checkout',
+        component: CheckoutComponent
+      },
+      {
+        path: 'pokemon',
+        loadChildren: () => import('./module/pokemon/pokemon.module').then(m => m.PokemonModule)
+      },
+      {
+        path: 'form-submission',
+        loadChildren: () => import('./module/submission/submission.module').then(m => m.SubmissionModule)
+      },]
   },
-  {
-    path: 'form-submission',
-    component: FormSubmissionComponent
-  },
-  {
-    path: 'form-submission/:id/edit',
-    component: FormSubmissionEditComponent
-  }
+
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [
+    RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

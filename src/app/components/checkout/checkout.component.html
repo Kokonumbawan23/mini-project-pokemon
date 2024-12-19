@@ -1,0 +1,134 @@
+<div class="h-screen mx-auto p-4 bg-white shadow-md rounded overflow-scroll">
+  <form class="my-8" [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+    <div class="mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="firstName">
+        First Name
+      </label>
+      <input formControlName="firstName"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        id="firstName" type="text" placeholder="Enter your name">
+      <p *ngIf="checkoutForm.controls['firstName'].invalid && checkoutForm.controls['firstName'].touched"
+        class="text-red-500 text-xs italic">
+        FirstName is required
+      </p>
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="lastName">
+        Last Name
+      </label>
+      <input formControlName="lastName"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        id="lastName" type="text" placeholder="Enter your name">
+      <p *ngIf="checkoutForm.controls['lastName'].invalid && checkoutForm.controls['lastName'].touched"
+        class="text-red-500 text-xs italic">
+        LastName is required
+      </p>
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
+        Email
+      </label>
+      <input formControlName="email"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        id="email" type="email" placeholder="Enter your email">
+      <p *ngIf="checkoutForm.controls['email'].invalid && checkoutForm.controls['email'].touched"
+        class="text-red-500 text-xs italic">
+        Email should be a valid email
+      </p>
+    </div>
+    <div class="mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="phone">
+        Phone Number
+      </label>
+      <div class="flex gap-2 items-stretch">
+        <select formControlName="phoneCountryCode" id="countryCode"
+          class="shadow appearance-none border rounded py-4 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-1/3">
+          <option value="+62" selected>+62 (ID)</option>
+          <option value="+1">+1 (USA)</option>
+          <option value="+44">+44 (UK)</option>
+          <option value="+91">+91 (IN)</option>
+        </select>
+        <input formControlName="phone"
+          class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-2/3"
+          id="phone" type="tel" placeholder="Enter your phone number">
+      </div>
+      <p *ngIf="checkoutForm.controls['phone'].invalid && checkoutForm.controls['phone'].touched"
+        class="text-red-500 text-xs italic">
+        Phone number should be a valid phone number
+      </p>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-gray-700 text-sm font-bold mb-2" for="address">
+        Address
+      </label>
+      <textarea formControlName="address"
+        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        id="address" placeholder="Enter your address" rows="4"></textarea>
+      <p *ngIf="checkoutForm.controls['address'].invalid && checkoutForm.controls['address'].touched"
+        class="text-red-500 text-xs italic">
+        Address is required
+    </div>
+
+    <div class="mb-4 flex gap-2">
+      <div *ngFor="let selection of pokemonSelections.controls; let i = index" [formGroup]="selection">
+        <div class="max-w-sm rounded overflow-hidden shadow-lg h-min">
+          <div class="px-6 py-4">
+            <div class="font-bold text-xl mb-2">{{ cartItems[i].pokemon | titlecase}} </div>
+            <div class="font-bold text-xl mb-2">Quantity: {{ cartItems[i].quantity }}</div>
+          </div>
+        </div>
+        <label for="buyOptions" class="block text-gray-700 text-sm font-bold mb-2">Buy Options</label>
+        <select formControlName="buyOption" (change)="updateDisplayedPokemons(i)" name="buyOption" id="buyOption"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+          <option value="" selected>Select Buy Options</option>
+          <option value="1">Only this pokemon</option>
+          <option value="all">All of the evolutions</option>
+        </select>
+        <p *ngIf="checkoutForm.controls['buyOptions'].invalid && checkoutForm.controls['buyOptions'].touched && checkoutForm.controls['buyOptions'].value === ''"
+          class="text-red-500 text-xs italic">
+          Buy Options is required
+        </p>
+        <div class="grid grid-cols-3 gap-4">
+          <div
+            *ngFor="let pokemon of displayedPokemons[i]"
+            class="p-4 bg-gray-100 border border-gray-300 rounded shadow"
+          >
+            <img
+              [src]="pokemon.sprites.front_default"
+              alt="{{ pokemon.name }}"
+              class="object-contain w-full h-24"
+            />
+            <h4 class="mt-2 font-semibold text-center">
+              {{ pokemon.name | uppercase }}
+            </h4>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center">
+      <button (click)="onSubmit()"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        type="button">
+        Submit
+      </button>
+    </div>
+
+    <div *ngIf="formSubmitted" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white rounded-lg p-6 shadow-lg">
+
+        <div>
+          <h2 class="text-2xl font-bold mb-4">Done</h2>
+          <p class="mb-4">Form submitted</p>
+        </div>
+        <button (click)="closeModal()"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          Close
+        </button>
+      </div>
+    </div>
+
+
+  </form>
+</div>
