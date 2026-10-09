@@ -1,16 +1,16 @@
 const environment = {
   production: false,
   firebase: {
-    apiKey: 'AIzaSyByAJ7MZNa77Y5_GslK7vEFR-NYrHlXMzA',
-    authDomain: 'training-angular-f0171.firebaseapp.com',
+    apiKey: 'AIzaSyCyL4TTfIL5srIcYG1xK5U0PRkwPboWss4',
+    authDomain: 'mini-app-pokemon.firebaseapp.com',
     databaseURL:
-      'https://training-angular-f0171-default-rtdb.asia-southeast1.firebasedatabase.app',
-    projectId: 'training-angular-f0171',
-    storageBucket: 'training-angular-f0171.firebasestorage.app',
-    messagingSenderId: '619094015914',
-    appId: '1:619094015914:web:cf3c3127307f5753be35d3',
-    measurementId: 'G-TFBSHEEQST',
+      'https://mini-app-pokemon-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'mini-app-pokemon',
+    storageBucket: 'mini-app-pokemon.firebasestorage.app',
+    messagingSenderId: '922550530244',
+    appId: '1:922550530244:web:771986caa672759b259991',
+    measurementId: 'G-KS87NN01EE',
   },
-}
+};
 
 export default environment;

@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { CvPageComponent } from './cv/cv-page/cv-page.component';
 import { HomeLayoutComponent } from './components/pokemon-layout/pokemon-layout.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { AuthGuard } from './guards/auth.guard';
@@ -9,7 +8,7 @@ import { CheckoutComponent } from './components/checkout/checkout.component';
 const routes: Routes = [
   {
     path: 'auth',
-    component: AuthComponent
+    component: AuthComponent,
   },
   {
     path: '',
@@ -18,27 +17,32 @@ const routes: Routes = [
     children: [
       {
         path: 'cart',
-        component: CartComponent
+        component: CartComponent,
       },
       {
         path: 'checkout',
-        component: CheckoutComponent
+        component: CheckoutComponent,
       },
       {
         path: 'pokemon',
-        loadChildren: () => import('./module/pokemon/pokemon.module').then(m => m.PokemonModule)
+        loadChildren: () =>
+          import('./module/pokemon/pokemon.module').then(
+            (m) => m.PokemonModule,
+          ),
       },
       {
         path: 'form-submission',
-        loadChildren: () => import('./module/submission/submission.module').then(m => m.SubmissionModule)
-      },]
+        loadChildren: () =>
+          import('./module/submission/submission.module').then(
+            (m) => m.SubmissionModule,
+          ),
+      },
+    ],
   },
-
 ];
 
 @NgModule({
-  imports: [
-    RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

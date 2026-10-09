@@ -1,17 +1,20 @@
 import { inject, NgModule } from '@angular/core';
-import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {
+  BrowserModule,
+  provideClientHydration,
+  withEventReplay,
+} from '@angular/platform-browser';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClient } from '@angular/common/http';
-import {EffectsModule} from '@ngrx/effects';
-import {StoreDevtoolsModule} from '@ngrx/store-devtools';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { CvModule } from "./cv/cv.module";
 import { TitlecasePipe } from './pipe/titlecase.pipe';
 import { HomeLayoutComponent } from './components/pokemon-layout/pokemon-layout.component';
 import { AuthComponent } from './components/auth/auth.component';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
-import {getFirestore, provideFirestore} from '@angular/fire/firestore';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import environment from '../environment';
 import { Auth, getAuth, provideAuth } from '@angular/fire/auth';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -35,22 +38,24 @@ import { PokemonService } from './services/pokemon.service';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    CvModule,
     FormsModule,
     ReactiveFormsModule,
-    StoreModule.forRoot({
-      cart: cartReducer
-    },{
-      runtimeChecks:{
-        strictStateImmutability: true,
-        strictActionImmutability: true,
-      }
-    }),
+    StoreModule.forRoot(
+      {
+        cart: cartReducer,
+      },
+      {
+        runtimeChecks: {
+          strictStateImmutability: true,
+          strictActionImmutability: true,
+        },
+      },
+    ),
     EffectsModule.forRoot([]),
     StoreDevtoolsModule.instrument({
-      maxAge: 25
-    })
-],
+      maxAge: 25,
+    }),
+  ],
   providers: [
     // PokemonService,
     // RealtimeDatabaseService,
@@ -59,8 +64,7 @@ import { PokemonService } from './services/pokemon.service';
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
     provideHttpClient(),
-
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
