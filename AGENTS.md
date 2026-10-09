@@ -12,10 +12,10 @@ Aplikasi Angular 19 untuk menjelajah Pokémon (data dari [PokeAPI](https://pokea
 |---|---|
 | Framework | Angular 19, **NgModule-based** (`standalone: false` di semua komponen) |
 | Rendering | SSR + prerender (`@angular/ssr`, Express di `src/server.ts`) |
-| State | NgRx Store (hanya feature `cart`), Effects & Devtools terpasang tapi belum dipakai |
+| State | NgRx Store (feature `cart`), Store DevTools hanya saat development; Signals untuk toast |
 | Auth | `@angular/fire/auth` (email + password) |
 | Database | Firebase Realtime Database via REST (`HttpClient`) |
-| HTTP ke PokeAPI | `axios` (bukan `HttpClient`) |
+| HTTP | `HttpClient` untuk PokeAPI & Realtime DB; `PokemonService` meng-cache respons di memori |
 | Styling | Tailwind CSS 3 + CSS per komponen, Font Awesome via CDN, Google Fonts (Archivo, Atkinson Hyperlegible) |
 | Test | Karma + Jasmine |
 
@@ -54,10 +54,9 @@ src/
     ├── route/                             # routing module milik feature module
     ├── guards/                            # authGuard & guestGuard (functional, cek Firebase Auth), FormGuard (canDeactivate)
     ├── interceptors/                      # firebaseAuthInterceptor: tempel ?auth=<idToken> ke request Realtime DB
-    ├── services/                          # PokemonService (axios), AuthService, RealtimeDatabaseService
+    ├── services/                          # PokemonService (HttpClient + cache), AuthService, RealtimeDatabaseService, CartActionsService, BinderStateService
     ├── shared/                            # product.ts (Product, harga & rarity), rupiah.pipe.ts (standalone)
-    ├── state/cart/                        # action, reducer, selector, state (+ CartStateModule yang tidak dipakai)
-    └── pipe/titlecase.pipe.ts             # bentrok nama dengan TitleCasePipe bawaan Angular
+    └── state/cart/                        # action, reducer, selector, state
 ```
 
 ### Alur routing
@@ -100,6 +99,12 @@ src/
 - Cart menyimpan `Product` (bukan respons API mentah) di `sessionStorage['cart']`; item tanpa `price` dibuang saat load.
 - Pesanan disimpan ke `formSubmissions` dengan `pokemonToBuy: [{ pokemon: [name], quantity, unitPrice }]`, `total`, `createdAt`.
 - `TcgCardComponent` dan `RupiahPipe` standalone: import ke NgModule, jangan dideklarasikan.
+
+## Performa
+
+- `PokemonService` menyimpan Promise per URL (request yang sama dipakai bersama) dan membuang field besar yang tidak dipakai (`moves`, `game_indices`, dll.). Kalau suatu saat butuh `moves`, ubah `slimPokemon()`.
+- Firebase Auth memakai `initializeAuth` (tanpa popup/redirect resolver). Kalau menambah login Google, ganti ke `getAuth` atau tambahkan `popupRedirectResolver`.
+- Budget bundle initial: peringatan di 650 kB (ukuran saat ini ±590 kB). Kalau terlewati, cari penyebabnya dulu sebelum menaikkan angka.
 
 ## Konvensi yang berlaku saat ini
 
