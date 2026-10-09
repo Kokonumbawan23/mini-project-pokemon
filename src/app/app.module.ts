@@ -14,11 +14,16 @@ import { HomeLayoutComponent } from './components/pokemon-layout/pokemon-layout.
 import { AuthComponent } from './components/auth/auth.component';
 import { provideFirebaseApp, initializeApp, getApp } from '@angular/fire/app';
 import environment from '../environment';
-import { browserLocalPersistence, indexedDBLocalPersistence, initializeAuth, provideAuth } from '@angular/fire/auth';
+import {
+  browserLocalPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth,
+  provideAuth,
+} from '@angular/fire/auth';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { CartComponent } from './components/cart/cart.component';
 import { StoreModule } from '@ngrx/store';
-import { cartReducer } from './state/cart/cart.reducer';
+import { cartReducer, metaReducers } from './state/cart/cart.reducer';
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { TcgCardComponent } from './components/tcg-card/tcg-card.component';
 import { RupiahPipe } from './shared/rupiah.pipe';
@@ -46,6 +51,7 @@ import { ToastContainerComponent } from './shared/toast/toast-container.componen
         cart: cartReducer,
       },
       {
+        metaReducers,
         runtimeChecks: {
           strictStateImmutability: true,
           strictActionImmutability: true,
@@ -58,9 +64,11 @@ import { ToastContainerComponent } from './shared/toast/toast-container.componen
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     // initializeAuth (bukan getAuth) supaya fitur login popup/redirect yang tidak dipakai
     // tidak ikut ter-bundle. Sesi disimpan di IndexedDB, cadangannya localStorage.
-    provideAuth(() => initializeAuth(getApp(), {
-      persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-    })),
+    provideAuth(() =>
+      initializeAuth(getApp(), {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+      }),
+    ),
     // Redux DevTools hanya saat development; di production tidak ikut ter-bundle
     isDevMode() ? provideStoreDevtools({ maxAge: 25 }) : [],
     provideHttpClient(withInterceptors([firebaseAuthInterceptor])),

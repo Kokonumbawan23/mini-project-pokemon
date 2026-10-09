@@ -82,7 +82,7 @@ src/
 - **Guard di server**: `authGuard` mengembalikan `false` saat SSR/prerender (tidak ada sesi), sehingga halaman terlindungi di-render kosong lalu dicek ulang di browser.
 - **Akses data**: request ke Realtime DB otomatis membawa token lewat interceptor; aturan akses ada di `database.rules.json` (harus di-publish manual di Firebase Console > Realtime Database > Rules).
 - **Pesanan per user**: checkout menyimpan `userId`; Orders memakai query `orderBy="userId"&equalTo="<uid>"`. Pesanan lama tanpa `userId` tidak bisa diakses lagi setelah rules di-publish.
-- **Cart**: reducer membaca/menulis `sessionStorage['cart']` langsung di dalam reducer (side effect).
+- **Cart**: state disimpan ke `sessionStorage['cart']` oleh meta-reducer `persist` (`cart.reducer.ts`) setelah setiap action, hanya `state.cart` dan hanya kalau berubah. Pemulihan saat start lewat `loadInitialState()`. Meta-reducer `logger` hanya aktif di development (`isDevMode()`), tetapi kodenya tetap ikut bundle production.
 - **Order**: `CheckoutComponent` dan `PokemonFormsComponent` sama-sama `POST` ke `formSubmissions` di Realtime DB, dengan bentuk data berbeda.
 
 ## Arah desain: binder kartu TCG
