@@ -41,14 +41,9 @@ export class AuthService {
         sessionStorage.setItem('user', JSON.stringify(userData));
       }
 
-      this.ngZone.run(() => {
-        alert('Login Successful');
-      });
     } catch (error: any) {
+      // Service tidak menampilkan UI; komponen yang memutuskan pesan untuk user
       console.error('Login Error:', error);
-      this.ngZone.run(() => {
-        alert('Login Failed: ' + error.message);
-      });
       throw error;
     }
   }
@@ -74,14 +69,8 @@ export class AuthService {
         sessionStorage.setItem('user', JSON.stringify(userData));
       }
 
-      this.ngZone.run(() => {
-        alert('Registration Successful');
-      });
     } catch (error: any) {
       console.error('Registration Error:', error);
-      this.ngZone.run(() => {
-        alert('Registration Failed: ' + error.message);
-      });
       throw error;
     }
   }
@@ -90,9 +79,6 @@ export class AuthService {
     if (this.isSessionStorageAvailable()) {
       sessionStorage.removeItem('user');
     }
-    this.ngZone.run(() => {
-      alert('Logged out successfully');
-    });
   }
 
   getUser(): any {

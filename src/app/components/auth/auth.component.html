@@ -1,52 +1,99 @@
-<div class="min-h-screen flex items-center justify-center bg-slate-100/80">
-  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-    <button (click)="formStatus = 'login'" [ngClass]="{'opacity-50': formStatus === 'register'}"
-      class=" mr-2 text-blue-700 border-b-2 border-blue-700  hover:bg-blue-100/50 font-bold py-2 px-4 focus:outline-none focus:shadow-outline"
-      type="button">
-      Login
-    </button>
-    <button (click)="formStatus = 'register'" [ngClass]="{'opacity-50': formStatus === 'login'}"
-      class="text-green-700  border-b-2 border-green-700 hover:bg-green-100/50 font-bold py-2 px-4 focus:outline-none focus:shadow-outline"
-      type="button">
-      Register
-    </button>
-    <h2 class="text-2xl font-bold mb-2 mt-4">{{ formStatus | titlecase }}</h2>
-    <p class="text-md text-gray-400">{{ (formStatus === 'login')? 'Login to continue' : 'Create an account'  }}</p>
-    <form [formGroup]="formGroup" (ngSubmit)="onSubmit()">
-      <div class="flex justify-center gap-4 mb-4">
+<div class="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+
+  <!-- ===== Sampul binder ===== -->
+  <section class="cover relative flex flex-col justify-between overflow-hidden px-6 py-8 text-paper sm:px-10 lg:py-12">
+    <div class="cover__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <img src="pokemon-logo-png-1428.png" alt="Pokémon" class="relative h-9 w-auto self-start sm:h-11" />
+
+    <div class="starter-fan" aria-hidden="true">
+      <div *ngFor="let card of starters; let i = index" class="starter-fan__card" [style.--i]="i">
+        <app-tcg-card [card]="card"></app-tcg-card>
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
-          Email
-        </label>
-        <input
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          formControlName="email"
-          id="username" type="text" placeholder="Username">
+    </div>
+
+    <div class="relative max-w-md">
+      <p class="font-wide text-3xl font-black leading-tight sm:text-4xl">Every Pokémon card, in one binder.</p>
+      <p class="mt-3 text-paper/70">Browse the Pokédex, compare stats and build your collection.</p>
+    </div>
+  </section>
+
+  <!-- ===== Form ===== -->
+  <section class="flex items-center justify-center px-6 py-10 sm:px-10">
+    <div class="w-full max-w-sm">
+      <div class="grid grid-cols-2 rounded-xl bg-ink/5 p-1" role="group" aria-label="Choose an option">
+        <button
+          type="button"
+          class="rounded-lg py-2 font-display font-bold transition-colors"
+          [ngClass]="mode === 'login' ? 'bg-paper shadow-sm' : 'text-ink/60 hover:text-ink'"
+          [attr.aria-pressed]="mode === 'login'"
+          (click)="setMode('login')">
+          Log in
+        </button>
+        <button
+          type="button"
+          class="rounded-lg py-2 font-display font-bold transition-colors"
+          [ngClass]="mode === 'register' ? 'bg-paper shadow-sm' : 'text-ink/60 hover:text-ink'"
+          [attr.aria-pressed]="mode === 'register'"
+          (click)="setMode('register')">
+          Create account
+        </button>
       </div>
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
-          Password
-        </label>
-        <input
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          formControlName="password"
-          id="password" type="password" placeholder="Password">
-      </div>
-      <div *ngIf="formStatus === 'login'">
+
+      <h1 class="mt-8 font-wide text-3xl font-black leading-tight">
+        {{ mode === 'login' ? 'Welcome back' : 'Start your collection' }}
+      </h1>
+      <p class="mt-2 text-ink/60">
+        {{ mode === 'login' ? 'Log in with the email you signed up with.' : 'All you need is an email and a password.' }}
+      </p>
+
+      <form class="mt-8 space-y-5" [formGroup]="formGroup" (ngSubmit)="onSubmit()" novalidate>
+        <div>
+          <label for="email" class="field-label">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="field"
+            autocomplete="email"
+            [class.field--error]="showError('email')" />
+          <p *ngIf="showError('email')" class="field-error">Enter an email address like name&#64;example.com.</p>
+        </div>
+
+        <div>
+          <label for="password" class="field-label">Password</label>
+          <div class="relative">
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              class="field pr-12"
+              [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+              [class.field--error]="showError('password')" />
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-ink/50 hover:text-ink"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              [attr.aria-pressed]="showPassword"
+              (click)="showPassword = !showPassword">
+              <i class="fa-regular" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+          <p *ngIf="showError('password')" class="field-error">Use at least 6 characters.</p>
+          <p *ngIf="mode === 'register' && !showError('password')" class="mt-1.5 text-sm text-ink/50">At least 6 characters.</p>
+        </div>
+
+        <p *ngIf="errorMessage" class="rounded-lg bg-pokered/10 p-3 text-sm font-bold text-pokered" role="alert">{{ errorMessage }}</p>
+
         <button
           type="submit"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-          Login
+          class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink font-display font-bold text-paper hover:bg-binder disabled:opacity-60"
+          [disabled]="isSubmitting">
+          <i *ngIf="isSubmitting" class="fa-solid fa-spinner fa-spin"></i>
+          <ng-container *ngIf="mode === 'login'">{{ isSubmitting ? 'Logging in…' : 'Log in' }}</ng-container>
+          <ng-container *ngIf="mode === 'register'">{{ isSubmitting ? 'Creating account…' : 'Create account' }}</ng-container>
         </button>
-      </div>
-      <div *ngIf="formStatus === 'register'">
-        <button
-          class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          type="submit">
-          Register
-        </button>
-      </div>
-    </form>
-  </div>
+      </form>
+    </div>
+  </section>
 </div>
