@@ -1,32 +1,74 @@
-<div class="container p-4 min-h-screen ps-10 pe-8">
-  <h1 class="text-4xl font-bold my-8 text-gray-800">Form Submission</h1>
-  <table class="bg-white w-full rounded-lg shadow-lg p-6 mb-6">
-    <thead class="bg-gray-200">
-      <tr>
-        <th class="px-4 py-2 text-left text-gray-800">ID</th>
-        <th class="px-4 py-2 text-left text-gray-800">First Name</th>
-        <th class="px-4 py-2 text-left text-gray-800">Last Name</th>
-        <th class="px-4 py-2 text-left text-gray-800">Email</th>
-        <th class="px-4 py-2 text-left text-gray-800">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let submission of submissions" class="hover:bg-gray-100">
-        <td class="border px-4 py-2">{{ submission.id }}</td>
-        <td class="border px-4 py-2">{{ submission.firstName }}</td>
-        <td class="border px-4 py-2">{{ submission.lastName }}</td>
-        <td class="border px-4 py-2">{{ submission.email }}</td>
-        <td class="border px-4 py-2 flex gap-2">
-          <button
-          routerLink="/form-submission/{{ submission.id }}/edit"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Edit
-          </button>
-          <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" (click)="deleteSubmission(submission.id)">
-            Delete
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+  <h1 class="font-wide text-4xl font-black leading-none">Orders</h1>
+  <p *ngIf="!isLoading && !loadError" class="mt-2 text-ink/60">
+    {{ orders.length }} {{ orders.length === 1 ? 'order' : 'orders' }}, newest first
+  </p>
+
+  <!-- Loading -->
+  <ul *ngIf="isLoading" class="mt-8 divide-y divide-ink/10 border-y border-ink/10" aria-label="Loading orders">
+    <li *ngFor="let s of skeletons" class="flex items-center gap-6 py-5">
+      <div class="h-20 w-24 animate-pulse rounded-lg bg-ink/10"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-4 w-48 animate-pulse rounded bg-ink/10"></div>
+        <div class="h-3 w-32 animate-pulse rounded bg-ink/10"></div>
+      </div>
+    </li>
+  </ul>
+
+  <!-- Error -->
+  <p *ngIf="loadError" class="mt-8 max-w-lg rounded-lg bg-pokered/10 p-4 font-bold text-pokered" role="alert">{{ loadError }}</p>
+
+  <!-- Kosong -->
+  <div *ngIf="!isLoading && !loadError && orders.length === 0" class="mt-10 max-w-md">
+    <p class="text-lg text-ink/70">No orders yet. Orders appear here after you check out.</p>
+    <a routerLink="/pokemon" class="mt-6 inline-flex h-12 items-center rounded-xl bg-ink px-6 font-display font-bold text-paper hover:bg-binder">
+      Browse the Pokédex
+    </a>
+  </div>
+
+  <!-- Daftar pesanan -->
+  <ul *ngIf="!isLoading && orders.length" class="mt-8 divide-y divide-ink/10 border-y border-ink/10">
+    <li *ngFor="let order of orders; trackBy: trackById" class="flex flex-wrap items-center gap-x-6 gap-y-4 py-5">
+      <!-- Kipas kartu -->
+      <div class="card-fan" aria-hidden="true">
+        <div *ngFor="let name of previewNames(order); let i = index" class="card-fan__card" [style.--i]="i">
+          <app-tcg-card *ngIf="products[name] as product; else placeholder" [card]="product"></app-tcg-card>
+          <ng-template #placeholder><div class="card-fan__placeholder"></div></ng-template>
+        </div>
+      </div>
+
+      <div class="min-w-0 flex-1 basis-48">
+        <p class="font-wide text-lg font-extrabold">{{ order.firstName }} {{ order.lastName }}</p>
+        <p class="text-sm text-ink/60">
+          <ng-container *ngIf="order.createdAt">{{ order.createdAt | date: 'd MMM y, HH:mm' }}, </ng-container>
+          {{ cardCount(order) }} {{ cardCount(order) === 1 ? 'card' : 'cards' }}
+        </p>
+        <p class="mt-1 truncate text-sm text-ink/60">
+          {{ summary(order) }}
+        </p>
+      </div>
+
+      <p class="w-32 text-right font-display text-lg font-extrabold tabular-nums">
+        <ng-container *ngIf="order.total != null; else noTotal">{{ order.total | rupiah }}</ng-container>
+        <ng-template #noTotal><span class="text-sm font-normal text-ink/50">No price recorded</span></ng-template>
+      </p>
+
+      <div class="flex gap-2">
+        <a
+          [routerLink]="['/form-submission', order.id, 'edit']"
+          class="inline-flex h-10 items-center rounded-lg border-2 border-ink/15 px-4 font-display font-bold hover:border-ink">
+          Edit
+        </a>
+        <button
+          type="button"
+          class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-ink/50 hover:bg-pokered/10 hover:text-pokered disabled:opacity-40"
+          [disabled]="deletingId === order.id"
+          [attr.aria-label]="'Delete order from ' + order.firstName"
+          title="Delete order"
+          (click)="deleteSubmission(order)">
+          <i class="fa-solid" [ngClass]="deletingId === order.id ? 'fa-spinner fa-spin' : 'fa-trash-can'"></i>
+        </button>
+      </div>
+    </li>
+  </ul>
 </div>

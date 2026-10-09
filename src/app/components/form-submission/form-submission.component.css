@@ -1,0 +1,20 @@
+/* Kipas kartu: sampai 3 kartu mini yang ditumpuk miring, seperti kartu di tangan */
+.card-fan {
+  position: relative;
+  width: 6.5rem;
+  height: 5.5rem;
+  flex: none;
+}
+.card-fan__card {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--i) * 1.3rem);
+  width: 3.5rem;
+  transform: rotate(calc((var(--i) - 1) * 7deg));
+  transform-origin: bottom center;
+}
+.card-fan__placeholder {
+  aspect-ratio: 63 / 88;
+  border-radius: 0.3rem;
+  background: rgb(32 36 58 / 0.1);
+}

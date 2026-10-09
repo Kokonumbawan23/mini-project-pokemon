@@ -57,4 +57,18 @@
     background-color: var(--type-color, #9ca3af);
     box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18);
   }
+
+  /* Form: dipakai di binder (search/sort), checkout, dan edit order */
+  .field {
+    @apply h-12 w-full rounded-lg border border-ink/15 bg-paper px-3 text-ink placeholder:text-ink/30 focus:border-binder focus:outline-none;
+  }
+  .field--error {
+    @apply border-pokered;
+  }
+  .field-label {
+    @apply mb-1.5 block font-display text-sm font-semibold text-ink/70;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm font-bold text-pokered;
+  }
 }

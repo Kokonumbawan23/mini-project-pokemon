@@ -1,8 +1,4 @@
 /* ---------- Kontrol ---------- */
-.field {
-  @apply h-11 rounded-lg border border-ink/15 bg-paper/70 px-3 text-ink placeholder:text-ink/40 focus:border-binder focus:bg-paper focus:outline-none;
-}
-
 .filter-label {
   @apply mb-2 block font-display text-sm font-semibold text-ink/70;
 }

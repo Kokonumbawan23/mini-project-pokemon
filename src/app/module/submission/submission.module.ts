@@ -4,6 +4,8 @@ import FormSubmissionEditComponent from "../../components/form-submission/edit/f
 import { CommonModule } from "@angular/common";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { FormSubmissionRouteModule } from "../../route/form-submission-route.module";
+import { TcgCardComponent } from "../../components/tcg-card/tcg-card.component";
+import { RupiahPipe } from "../../shared/rupiah.pipe";
 
 
 
@@ -16,7 +18,9 @@ import { FormSubmissionRouteModule } from "../../route/form-submission-route.mod
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    FormSubmissionRouteModule
+    FormSubmissionRouteModule,
+    TcgCardComponent,
+    RupiahPipe,
   ],
 })
 export class SubmissionModule { }
