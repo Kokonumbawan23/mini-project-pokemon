@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { PokemonService } from '../../services/pokemon.service';
 import { RealtimeDatabaseService } from '../../services/realtime-database.service';
-import { Router } from 'express';
 import { Store } from '@ngrx/store';
 import { CartItem } from '../../state/cart/cart.state';
-import { Observable, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { clearCart } from '../../state/cart/cart.action';
 import { selectCartItem } from '../../state/cart/cart.selector';
 
@@ -24,6 +24,7 @@ export class CheckoutComponent  implements OnInit {
  evolutionOptions: Record<string, any> = {};
  displayedPokemons: any[][] = [];
  formSubmitted: boolean = false;
+ private destroyRef = inject(DestroyRef);
 
   constructor(
     private pokemonService: PokemonService,
@@ -51,8 +52,13 @@ export class CheckoutComponent  implements OnInit {
   onSubmit() {
   }
 
-  async ngOnInit(): Promise<void> {
-    this.cartItems$.subscribe(async items => {
+  ngOnInit(): void {
+    this.cartItems$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async items => {
+      // Reset dulu setiap kali cart berubah, supaya form & daftar Pokémon tidak dobel
+      this.pokemonSelections.clear();
+      this.evolutionOptions = {};
+      this.displayedPokemons = [];
+
       if(!items || items.length === 0){
         console.warn('No items in cart');
         this.cartItems = [];

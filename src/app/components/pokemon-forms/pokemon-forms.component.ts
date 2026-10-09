@@ -43,7 +43,7 @@ export default class PokemonFormsComponent implements OnInit, CanComponentDeacti
 
 
 
-  onSubmit() {
+  async onSubmit() {
     if(this.buyForm.invalid){
       this.buyForm.markAllAsTouched();
       return;
@@ -59,8 +59,9 @@ export default class PokemonFormsComponent implements OnInit, CanComponentDeacti
     }
 
     try{
-      this.dbService.saveFormSubmission(data);
-      console.log('Form submission saved successfully!');
+      await this.dbService.saveFormSubmission(data);
+      this.dirty = false;
+      this.formStates.emit(this.dirty);
       this.isFormSuccess = true;
       this.showModal = true;
     }catch(error){

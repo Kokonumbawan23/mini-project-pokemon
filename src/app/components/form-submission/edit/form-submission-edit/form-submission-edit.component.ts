@@ -68,7 +68,7 @@ export default class FormSubmissionEditComponent implements OnInit, CanComponent
     console.log(this.displayedPokemons);
   }
 
-  onSubmit() {
+  async onSubmit() {
     if(this.buyForm.invalid){
       this.buyForm.markAllAsTouched();
       return;
@@ -78,15 +78,15 @@ export default class FormSubmissionEditComponent implements OnInit, CanComponent
       firstName: this.buyForm.controls['firstName'].value,
       lastName: this.buyForm.controls['lastName'].value,
       email: this.buyForm.controls['email'].value,
+      phoneCountryCode: this.buyForm.controls['phoneCountryCode'].value,
       phone: this.buyForm.controls['phone'].value,
       address: this.buyForm.controls['address'].value,
-      // pokemonToBuy: this.selectedPokemons.map(pokemon => pokemon.name)
     }
 
     try{
       const id = this.route.snapshot.paramMap.get('id') as string;
-      this.dbService.updateFormSubmission(id, data);
-      console.log('Form submission updated successfully!');
+      await this.dbService.updateFormSubmission(id, data);
+      this.dirty = false;
       this.isFormSuccess = true;
       this.showModal = true;
     }catch(error){

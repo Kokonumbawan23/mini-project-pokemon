@@ -55,6 +55,19 @@ export const cartReducer  = createReducer(
     saveStateToSessionStorage(newState);
     return newState;
   }),
+  on(updateQuantity, (state, { pokemonName, quantity }) => {
+    // quantity <= 0 dianggap menghapus item dari cart
+    const updatedItems = quantity > 0
+      ? state.items.map((item) =>
+          item.pokemon.name === pokemonName ? { ...item, quantity } : item
+        )
+      : state.items.filter((item) => item.pokemon.name !== pokemonName);
+
+    const newState = { ...state, items: updatedItems };
+
+    saveStateToSessionStorage(newState);
+    return newState;
+  }),
   on(clearCart, (state) => {
     saveStateToSessionStorage(initialCartState);
     return initialCartState;

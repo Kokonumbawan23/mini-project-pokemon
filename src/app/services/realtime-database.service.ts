@@ -58,8 +58,9 @@ export class RealtimeDatabaseService {
 
   async updateFormSubmission(id: string, data: any): Promise<void> {
     try {
+      // PATCH hanya mengubah field yang dikirim; PUT akan menimpa seluruh record
       await firstValueFrom(
-        this.http.put(`${this.databaseUrl}/${id}.json`, data)
+        this.http.patch(`${this.databaseUrl}/${id}.json`, data)
       );
     } catch (error) {
       console.error('Error updating form submission:', error);
