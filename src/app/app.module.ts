@@ -27,6 +27,7 @@ import { RealtimeDatabaseService } from './services/realtime-database.service';
 import { PokemonService } from './services/pokemon.service';
 import { TcgCardComponent } from './components/tcg-card/tcg-card.component';
 import { RupiahPipe } from './shared/rupiah.pipe';
+import { ToastContainerComponent } from './shared/toast/toast-container.component';
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import { RupiahPipe } from './shared/rupiah.pipe';
     ReactiveFormsModule,
     TcgCardComponent,
     RupiahPipe,
+    ToastContainerComponent,
     StoreModule.forRoot(
       {
         cart: cartReducer,

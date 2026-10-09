@@ -23,3 +23,20 @@
   outline: 3px solid theme('colors.binder');
   outline-offset: 3px;
 }
+
+/* Tombol Pokémon sebelumnya / berikutnya */
+.dex-btn {
+  @apply inline-flex h-9 items-center gap-2 rounded-lg border-2 border-ink/15 px-3 font-display text-sm font-bold transition-colors hover:border-ink disabled:pointer-events-none disabled:opacity-30;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 1.5em;
+  border: 1px solid rgb(32 36 58 / 0.2);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+  padding: 0 0.3em;
+  font-family: inherit;
+  font-size: 0.85em;
+  text-align: center;
+}

@@ -16,6 +16,7 @@
           <span class="sr-only">Search Pokémon</span>
           <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40"></i>
           <input
+            #searchInput
             type="search"
             class="field w-full pl-9"
             placeholder="Name or number"
@@ -167,12 +168,20 @@
         <!-- Halaman binder: 9 kartu -->
         <ul *ngIf="!isLoading && filteredPokemon.length" class="binder__page" [ngClass]="'flip-' + flipDir">
           <li *ngFor="let pokemon of paginatedPokemon; let i = index" class="pocket" [style.--i]="i">
-            <a [routerLink]="['/pokemon/detail', pokemon.name]" class="pocket__link" [attr.aria-label]="(pokemon.name | titlecase) + ', ' + (pokemon.card.price | rupiah)">
+            <a #cardLink [routerLink]="['/pokemon/detail', pokemon.name]" class="pocket__link" [attr.aria-label]="(pokemon.name | titlecase) + ', ' + (pokemon.card.price | rupiah)">
               <app-tcg-card [card]="pokemon.card" [collectorTotal]="pokemonList.length">
                 <span *ngIf="sortBadge(pokemon) as badge" class="sort-badge">{{ badge }}</span>
               </app-tcg-card>
-              <span class="price-sticker">{{ pokemon.card.price | rupiah }}</span>
             </a>
+            <!-- Stiker harga = tombol tambah ke cart (di luar <a>, karena tombol tidak boleh di dalam link) -->
+            <button
+              type="button"
+              class="price-sticker"
+              [attr.aria-label]="'Add ' + (pokemon.name | titlecase) + ' to cart for ' + (pokemon.card.price | rupiah)"
+              (click)="quickAdd(pokemon.card, cardLink)">
+              {{ pokemon.card.price | rupiah }}
+              <i class="fa-solid fa-plus price-sticker__plus" aria-hidden="true"></i>
+            </button>
           </li>
         </ul>
       </div>
@@ -187,6 +196,9 @@
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </nav>
+      <p *ngIf="!isLoading && filteredPokemon.length" class="mt-3 hidden text-center text-sm text-ink/50 md:block">
+        Press <kbd>←</kbd> <kbd>→</kbd> to turn pages, <kbd>/</kbd> to search. Tap a price to add the card to your cart.
+      </p>
     </section>
   </div>
 </div>

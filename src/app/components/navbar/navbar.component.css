@@ -10,3 +10,16 @@
   content: '';
   @apply absolute inset-x-2 bottom-0 h-1 rounded-t bg-gold;
 }
+
+/* Badge cart memantul saat ada kartu yang ditambahkan */
+.badge-bump {
+  animation: badge-bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes badge-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5); background-color: theme('colors.pokered'); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-bump { animation: none; }
+}

@@ -7,11 +7,12 @@
     <nav class="flex flex-1 items-center gap-1 sm:gap-2" aria-label="Main">
       <a routerLink="/pokemon" routerLinkActive="is-active" class="nav-link">Pokédex</a>
       <a routerLink="/form-submission" routerLinkActive="is-active" class="nav-link">Orders</a>
-      <a routerLink="/cart" routerLinkActive="is-active" class="nav-link">
+      <a routerLink="/cart" routerLinkActive="is-active" class="nav-link" data-cart-target>
         Cart
         <span
           *ngIf="(cartItemCount$ | async) as count"
-          class="ml-1 rounded-full bg-ink px-1.5 text-xs font-bold text-paper"
+          class="ml-1 inline-block rounded-full bg-ink px-1.5 text-xs font-bold text-paper"
+          [class.badge-bump]="bump"
           [attr.aria-label]="count + (count === 1 ? ' card' : ' cards')">
           {{ count }}
         </span>

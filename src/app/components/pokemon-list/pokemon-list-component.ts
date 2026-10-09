@@ -1,5 +1,6 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
 import { PokemonService } from "../../services/pokemon.service";
+import { CartActionsService } from "../../services/cart-actions.service";
 import { Product, productFromApi, Rarity, RARITY_LABEL, RARITY_SYMBOL } from "../../shared/product";
 
 type SortKey = 'id' | 'name' | 'price' | 'total' | 'hp' | 'attack' | 'defense' | 'speed' | 'height' | 'weight';
@@ -58,7 +59,9 @@ export class PokemonListComponent implements OnInit {
   /** Arah animasi saat halaman binder dibalik */
   flipDir: 'next' | 'prev' | 'none' = 'none';
 
-  constructor(private pokemonService: PokemonService) {
+  @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
+
+  constructor(private pokemonService: PokemonService, private cartActions: CartActionsService) {
   }
 
   async fetchPokemon(){
@@ -234,6 +237,31 @@ export class PokemonListComponent implements OnInit {
     this.sortKey = 'id';
     this.sortDir = 'asc';
     this.applyFilter();
+  }
+
+  // --- Cart ---
+
+  quickAdd(product: Product, cardElement: HTMLElement) {
+    this.cartActions.add([product], cardElement);
+  }
+
+  // --- Keyboard ---
+
+  /** ← → membalik halaman binder, / langsung ke kolom search */
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const isTyping = ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable;
+    if (isTyping || event.ctrlKey || event.metaKey || event.altKey) return;
+
+    if (event.key === 'ArrowRight') {
+      this.nextPage();
+    } else if (event.key === 'ArrowLeft') {
+      this.previousPage();
+    } else if (event.key === '/') {
+      event.preventDefault(); // jangan sampai karakter "/" ikut terketik
+      this.searchInput?.nativeElement.focus();
+    }
   }
 
   // --- Pagination ---

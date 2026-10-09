@@ -1,13 +1,24 @@
 <div *ngIf="pokemon && card" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12" [ngClass]="'type-' + card.types[0]">
-  <a routerLink="/pokemon" class="inline-flex items-center gap-2 font-display font-semibold text-ink/60 hover:text-ink">
-    <i class="fa-solid fa-chevron-left text-sm"></i> Back to binder
-  </a>
+  <nav class="flex flex-wrap items-center justify-between gap-3" aria-label="Pokémon navigation">
+    <a routerLink="/pokemon" class="inline-flex items-center gap-2 font-display font-semibold text-ink/60 hover:text-ink">
+      <i class="fa-solid fa-chevron-left text-sm"></i> Back to binder
+    </a>
+    <div class="flex items-center gap-2">
+      <button type="button" class="dex-btn" [disabled]="!prevId" (click)="goTo(prevId)" [attr.aria-label]="'Previous Pokémon, number ' + prevId">
+        <i class="fa-solid fa-arrow-left"></i> <span class="tabular-nums">No. {{ prevId }}</span>
+      </button>
+      <button type="button" class="dex-btn" [disabled]="!nextId" (click)="goTo(nextId)" [attr.aria-label]="'Next Pokémon, number ' + nextId">
+        <span class="tabular-nums">No. {{ nextId }}</span> <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <span class="hidden text-sm text-ink/50 lg:inline">or press <kbd>←</kbd> <kbd>→</kbd></span>
+    </div>
+  </nav>
 
-  <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-16">
+  <div class="mt-6 grid gap-10 transition-opacity duration-200 lg:grid-cols-[minmax(0,380px)_1fr] lg:gap-16" [class.opacity-40]="isLoading" [attr.aria-busy]="isLoading">
     <!-- ===== Kartu besar + aksi ===== -->
     <div class="self-start lg:sticky lg:top-24">
       <div class="mx-auto max-w-[340px] lg:max-w-none">
-        <app-tcg-card [card]="card" size="lg" [interactive]="true"></app-tcg-card>
+        <app-tcg-card #bigCard [card]="card" size="lg" [interactive]="true"></app-tcg-card>
       </div>
 
       <div class="mx-auto mt-6 max-w-[340px] space-y-3 lg:max-w-none">
@@ -19,11 +30,9 @@
         <div class="flex gap-2">
           <button
             type="button"
-            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-display font-bold text-paper transition-colors"
-            [ngClass]="addedToCart ? 'bg-ink' : 'bg-pokered hover:bg-[#c42d0b]'"
+            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-pokered font-display font-bold text-paper transition-transform hover:bg-[#c42d0b] active:scale-[0.98]"
             (click)="addToCart()">
-            <ng-container *ngIf="!addedToCart"><i class="fa-solid fa-cart-plus"></i> Add to cart</ng-container>
-            <ng-container *ngIf="addedToCart"><i class="fa-solid fa-check"></i> Added to cart</ng-container>
+            <i class="fa-solid fa-cart-plus"></i> Add to cart
           </button>
           <button
             type="button"
@@ -38,11 +47,9 @@
         <button
           *ngIf="evolutions.length > 1"
           type="button"
-          class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 font-display font-bold transition-colors"
-          [ngClass]="addedLine ? 'border-ink bg-ink text-paper' : 'border-pokered text-pokered hover:bg-pokered hover:text-paper'"
+          class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 border-pokered font-display font-bold text-pokered transition-colors hover:bg-pokered hover:text-paper"
           (click)="addEvolutionLine()">
-          <ng-container *ngIf="!addedLine">Add all {{ evolutions.length }} evolutions for {{ evolutionLinePrice | rupiah }}</ng-container>
-          <ng-container *ngIf="addedLine"><i class="fa-solid fa-check"></i> Evolution line added</ng-container>
+          Add all {{ evolutions.length }} evolutions for {{ evolutionLinePrice | rupiah }}
         </button>
 
         <p *ngIf="(inCart$ | async) as qty" class="text-center text-sm text-ink/70">

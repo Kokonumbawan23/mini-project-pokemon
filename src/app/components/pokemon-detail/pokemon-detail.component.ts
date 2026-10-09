@@ -1,8 +1,8 @@
 import { ActivatedRoute, Router } from '@angular/router';
 import { PokemonService } from './../../services/pokemon.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { addCart } from '../../state/cart/cart.action';
+import { CartActionsService } from '../../services/cart-actions.service';
 import { Observable, of } from 'rxjs';
 import { Product, productFromApi, RARITY_LABEL } from '../../shared/product';
 import { selectQuantityInCart } from '../../state/cart/cart.selector';
@@ -24,9 +24,13 @@ export class PokemonDetailComponent implements OnInit{
     totalStats: number = 0;
     card: Product | null = null;
     inCart$: Observable<number> = of(0);
-    addedLine: boolean = false;
     readonly rarityLabel = RARITY_LABEL;
-    addedToCart: boolean = false;
+    /** true selama data Pokémon berikutnya sedang dimuat */
+    isLoading: boolean = false;
+    /** Nomor urut permintaan; hanya hasil permintaan terakhir yang dipakai */
+    private loadSeq = 0;
+    readonly maxId = 1025; // jumlah Pokémon di National Pokédex
+    @ViewChild('bigCard', { read: ElementRef }) bigCard?: ElementRef<HTMLElement>;
     showForm: boolean = false;
     isFormDirty: boolean = false;
     statLabels: Record<string, string> = {
@@ -42,7 +46,8 @@ export class PokemonDetailComponent implements OnInit{
     private pokemonService: PokemonService,
     private route: ActivatedRoute,
     private router: Router,
-    private store:Store
+    private store:Store,
+    private cartActions: CartActionsService,
     ) {}
 
     async ngOnInit() {
@@ -72,12 +77,23 @@ export class PokemonDetailComponent implements OnInit{
     }
 
     async wrapper(name: string){
+        const seq = ++this.loadSeq;
+        this.isLoading = true;
 
         // Dua request ini tidak saling bergantung, jadi dijalankan bersamaan
-        const [pokemon, species] = await Promise.all([
-          this.pokemonService.getPokemonDetailsByName(name),
-          this.pokemonService.getPokemonSpecies(name),
-        ]);
+        let pokemon: any, species: any;
+        try {
+          [pokemon, species] = await Promise.all([
+            this.pokemonService.getPokemonDetailsByName(name),
+            this.pokemonService.getPokemonSpecies(name),
+          ]);
+        } catch {
+          if (seq === this.loadSeq) this.isLoading = false;
+          return;
+        }
+        // User sudah pindah ke Pokémon lain selama menunggu → buang hasil ini
+        if (seq !== this.loadSeq) return;
+        this.isLoading = false;
         this.pokemon = pokemon;
         this.species = species;
 
@@ -104,6 +120,7 @@ export class PokemonDetailComponent implements OnInit{
         this.evolutionChain = await this.pokemonService.getEvolutions(this.species.evolution_chain.url);
         const stages = this.parseEvolutions(this.evolutionChain);
         const details = await Promise.all(stages.map(stage => this.pokemonService.getPokemonDetailsByName(stage.name)));
+        if (seq !== this.loadSeq) return;
         this.evolutions = stages.map((stage, i) => ({ ...stage, card: productFromApi(details[i]) }));
 
     }
@@ -123,18 +140,35 @@ export class PokemonDetailComponent implements OnInit{
 
     addToCart(){
       if (!this.card) return;
-      this.store.dispatch(addCart({pokemon: this.card, quantity: 1}));
-      // Feedback singkat di tombol supaya user tahu aksinya berhasil
-      this.addedToCart = true;
-      setTimeout(() => this.addedToCart = false, 1500);
+      this.cartActions.add([this.card], this.bigCard?.nativeElement);
     }
 
     addEvolutionLine(){
-      for (const ev of this.evolutions) {
-        this.store.dispatch(addCart({ pokemon: ev.card, quantity: 1 }));
-      }
-      this.addedLine = true;
-      setTimeout(() => this.addedLine = false, 1500);
+      this.cartActions.add(this.evolutions.map(ev => ev.card), this.bigCard?.nativeElement);
+    }
+
+    // --- Pokémon sebelumnya / berikutnya ---
+
+    get prevId(): number | null {
+      return this.pokemon && this.pokemon.id > 1 ? this.pokemon.id - 1 : null;
+    }
+
+    get nextId(): number | null {
+      return this.pokemon && this.pokemon.id < this.maxId ? this.pokemon.id + 1 : null;
+    }
+
+    goTo(id: number | null) {
+      if (id) this.router.navigate(['/pokemon/detail', id]);
+    }
+
+    @HostListener('document:keydown', ['$event'])
+    onKeydown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      const isTyping = ['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable;
+      if (isTyping || event.ctrlKey || event.metaKey || event.altKey) return;
+
+      if (event.key === 'ArrowLeft') this.goTo(this.prevId);
+      if (event.key === 'ArrowRight') this.goTo(this.nextId);
     }
 
     closeFormEvent(status: boolean){
