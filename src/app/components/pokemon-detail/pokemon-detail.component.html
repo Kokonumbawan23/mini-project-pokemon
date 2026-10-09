@@ -10,23 +10,44 @@
         <app-tcg-card [card]="card" size="lg" [interactive]="true"></app-tcg-card>
       </div>
 
-      <div class="mx-auto mt-6 flex max-w-[340px] gap-2 lg:max-w-none">
+      <div class="mx-auto mt-6 max-w-[340px] space-y-3 lg:max-w-none">
+        <div class="flex items-baseline justify-between gap-4">
+          <p class="font-wide text-3xl font-black">{{ card.price | rupiah }}</p>
+          <p class="text-right text-sm text-ink/70">{{ rarityLabel[card.rarity] }}</p>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-display font-bold text-paper transition-colors"
+            [ngClass]="addedToCart ? 'bg-ink' : 'bg-pokered hover:bg-[#c42d0b]'"
+            (click)="addToCart()">
+            <ng-container *ngIf="!addedToCart"><i class="fa-solid fa-cart-plus"></i> Add to cart</ng-container>
+            <ng-container *ngIf="addedToCart"><i class="fa-solid fa-check"></i> Added to cart</ng-container>
+          </button>
+          <button
+            type="button"
+            class="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-ink/15 text-ink transition-colors hover:border-ink"
+            aria-label="Play cry"
+            title="Play cry"
+            (click)="playCry()">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+        </div>
+
         <button
+          *ngIf="evolutions.length > 1"
           type="button"
-          class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-display font-bold text-paper transition-colors"
-          [ngClass]="addedToCart ? 'bg-ink' : 'bg-pokered hover:bg-[#c42d0b]'"
-          (click)="addToCart()">
-          <ng-container *ngIf="!addedToCart"><i class="fa-solid fa-cart-plus"></i> Add to cart</ng-container>
-          <ng-container *ngIf="addedToCart"><i class="fa-solid fa-check"></i> Added to cart</ng-container>
+          class="flex h-11 w-full items-center justify-center gap-2 rounded-xl border-2 font-display font-bold transition-colors"
+          [ngClass]="addedLine ? 'border-ink bg-ink text-paper' : 'border-pokered text-pokered hover:bg-pokered hover:text-paper'"
+          (click)="addEvolutionLine()">
+          <ng-container *ngIf="!addedLine">Add all {{ evolutions.length }} evolutions for {{ evolutionLinePrice | rupiah }}</ng-container>
+          <ng-container *ngIf="addedLine"><i class="fa-solid fa-check"></i> Evolution line added</ng-container>
         </button>
-        <button
-          type="button"
-          class="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-ink/15 text-ink transition-colors hover:border-ink"
-          aria-label="Play cry"
-          title="Play cry"
-          (click)="playCry()">
-          <i class="fa-solid fa-volume-high"></i>
-        </button>
+
+        <p *ngIf="(inCart$ | async) as qty" class="text-center text-sm text-ink/70">
+          {{ qty }} in your cart. <a routerLink="/cart" class="font-bold text-ink underline decoration-gold decoration-2 underline-offset-2">View cart</a>
+        </p>
       </div>
     </div>
 

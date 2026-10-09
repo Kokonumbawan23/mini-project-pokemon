@@ -54,6 +54,7 @@ src/
     ├── route/                             # routing module milik feature module
     ├── guards/                            # AuthGuard (cek sessionStorage 'user'), FormGuard (canDeactivate)
     ├── services/                          # PokemonService (axios), AuthService, RealtimeDatabaseService
+    ├── shared/                            # product.ts (Product, harga & rarity), rupiah.pipe.ts (standalone)
     ├── state/cart/                        # action, reducer, selector, state (+ CartStateModule yang tidak dipakai)
     └── pipe/titlecase.pipe.ts             # bentrok nama dengan TitleCasePipe bawaan Angular
 ```
@@ -87,6 +88,14 @@ Tidak ada route `''` → redirect dan tidak ada wildcard `**`; membuka `/` hanya
 - Warna tipe: class global `type-<nama>` mengisi `--type-color`; pakai `var(--type-color)` di CSS. Jangan membuat class Tailwind dinamis (`'bg-' + type`).
 - `<app-tcg-card>` memakai satuan `cqw`; ukuran kartu ditentukan oleh lebar parent. Konten tambahan (mis. harga) lewat `<ng-content>`.
 - Hindari: label huruf kapital semua, monospace untuk angka kecil, efek hover/animasi di setiap elemen, kotak putih untuk setiap section.
+
+## E-commerce
+
+- Harga & rarity dihitung di `shared/product.ts` dari total base stats (`priceFor`, `rarityFor`). Jangan hitung harga di komponen.
+- Selalu ubah respons PokeAPI dengan `productFromApi()` sebelum masuk ke cart atau `<app-tcg-card>`.
+- Cart menyimpan `Product` (bukan respons API mentah) di `sessionStorage['cart']`; item tanpa `price` dibuang saat load.
+- Pesanan disimpan ke `formSubmissions` dengan `pokemonToBuy: [{ pokemon: [name], quantity, unitPrice }]`, `total`, `createdAt`.
+- `TcgCardComponent` dan `RupiahPipe` standalone: import ke NgModule, jangan dideklarasikan.
 
 ## Konvensi yang berlaku saat ini
 

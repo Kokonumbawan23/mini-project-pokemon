@@ -1,13 +1,11 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { PokemonService } from '../../services/pokemon.service';
-import { RealtimeDatabaseService } from '../../services/realtime-database.service';
+import { Component } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
+import { Observable, firstValueFrom } from 'rxjs';
+import { RealtimeDatabaseService } from '../../services/realtime-database.service';
 import { CartItem } from '../../state/cart/cart.state';
-import { Observable } from 'rxjs';
 import { clearCart } from '../../state/cart/cart.action';
-import { selectCartItem } from '../../state/cart/cart.selector';
+import { selectCartItem, selectCartSubtotal, selectCartTotalQuantity } from '../../state/cart/cart.selector';
 
 @Component({
   selector: 'app-checkout',
@@ -16,152 +14,74 @@ import { selectCartItem } from '../../state/cart/cart.selector';
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.css'
 })
-export class CheckoutComponent  implements OnInit {
+export class CheckoutComponent {
+  cartItems$: Observable<CartItem[]>;
+  totalQuantity$: Observable<number>;
+  subtotal$: Observable<number>;
 
- checkoutForm: FormGroup;
- cartItems$: Observable<CartItem[]>;
- cartItems: CartItem[] = [];
- evolutionOptions: Record<string, any> = {};
- displayedPokemons: any[][] = [];
- formSubmitted: boolean = false;
- private destroyRef = inject(DestroyRef);
+  isSubmitting = false;
+  submitError = '';
+  /** Ringkasan pesanan yang berhasil, ditampilkan di halaman konfirmasi */
+  placedOrder: { name: string; email: string; total: number; cards: number } | null = null;
 
-  constructor(
-    private pokemonService: PokemonService,
-    private dbService:RealtimeDatabaseService,
-    private fb: FormBuilder,
-    private store: Store<{ cart: CartItem[] }>,
+  checkoutForm = new FormGroup({
+    firstName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    phoneCountryCode: new FormControl('+62', { nonNullable: true, validators: [Validators.required] }),
+    phone: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^[0-9]{9,13}$/)] }),
+    address: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(10)] }),
+  });
 
-  ) {
+  constructor(private dbService: RealtimeDatabaseService, private store: Store) {
     this.cartItems$ = this.store.select(selectCartItem);
-    this.checkoutForm = this.fb.group({
-      firstName: new FormControl('', [Validators.required]),
-      lastName: new FormControl('', [Validators.required]),
-      email: new FormControl('', [Validators.required, Validators.email]),
-      phoneCountryCode: new FormControl('+62', [Validators.required]),
-      phone: new FormControl('', [Validators.required, Validators.minLength(10)]),
-      address: new FormControl('', [Validators.required]),
-      pokemonSelections: this.fb.array([]),
-    });
+    this.totalQuantity$ = this.store.select(selectCartTotalQuantity);
+    this.subtotal$ = this.store.select(selectCartSubtotal);
   }
 
-  get pokemonSelections(): FormArray<FormGroup>{
-    return this.checkoutForm.get('pokemonSelections') as FormArray<FormGroup>;
+  /** true kalau field sudah disentuh dan tidak valid, untuk menampilkan pesan error */
+  showError(field: 'firstName' | 'lastName' | 'email' | 'phone' | 'address'): boolean {
+    const control = this.checkoutForm.controls[field];
+    return control.invalid && control.touched;
   }
 
-  onSubmit() {
-  }
-
-  ngOnInit(): void {
-    this.cartItems$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async items => {
-      // Reset dulu setiap kali cart berubah, supaya form & daftar Pokémon tidak dobel
-      this.pokemonSelections.clear();
-      this.evolutionOptions = {};
-      this.displayedPokemons = [];
-
-      if(!items || items.length === 0){
-        console.warn('No items in cart');
-        this.cartItems = [];
-        return;
-      }
-      this.cartItems = items;
-      await this.initEvolutionsOpt();
-    } );
-
-  }
-
-  private async initEvolutionsOpt(): Promise<void>{
-      for (const item of this.cartItems) {
-        try {
-          const species = await this.pokemonService.getPokemonSpecies(item.pokemon.name);
-          const evoUrl = species.evolution_chain.url;
-          const evolution = await this.pokemonService.getEvolutions(evoUrl);
-
-          let current = evolution.chain;
-          const evolutionList = [];
-          while (current) {
-            const pokemon = await this.pokemonService.getPokemonDetailsByName(current.species.name);
-            evolutionList.push(pokemon);
-            current = current.evolves_to[0];
-          }
-
-          this.evolutionOptions[item.pokemon.name] = evolutionList;
-          this.pokemonSelections.push(this.fb.group({
-            buyOption: ['1', Validators.required],
-            quantity: [
-              item.quantity, Validators.required
-            ],}));
-
-          const replicatedPokemon =  [];
-          for(let i = 0; i < item.quantity; i++){
-            replicatedPokemon.push(item.pokemon);
-          }
-          this.displayedPokemons.push(replicatedPokemon);
-        } catch (error) {
-          console.error('Error getting evolutions:', error);
-        }
-      };
-
-  }
-
-  updateDisplayedPokemons(index: number){
-    const buyOption = this.pokemonSelections.at(index).get('buyOption')?.value;
-
-    const baseQuantity = this.cartItems[index].quantity;
-    const selectedPokemon =
-      buyOption === '1' ? [this.cartItems[index].pokemon]
-      : this.evolutionOptions[this.cartItems[index].pokemon.name];
-
-     // Update displayed Pokémon: replicate each selected Pokémon by baseQuantity
-     const replicatedPokemon = [];
-     for (let i = 0; i < baseQuantity; i++) {
-       replicatedPokemon.push(...selectedPokemon);
-     }
-     this.displayedPokemons[index] = replicatedPokemon;
-
-     // Update quantity to match the total number of displayed Pokémon
-     const totalQuantity = replicatedPokemon.length;
-
-     this.pokemonSelections.at(index).patchValue({
-       quantity: totalQuantity,
-     });
-  }
-
-  async submitOrder(): Promise<void>{
-    if(this.checkoutForm.invalid){
+  async submitOrder(): Promise<void> {
+    if (this.checkoutForm.invalid) {
       this.checkoutForm.markAllAsTouched();
       return;
     }
 
-    const formValues = this.checkoutForm.value;
-    const pokemonToBuy = this.cartItems.map((item, index) => {
-      const buyOption = this.pokemonSelections.at(index).get('buyOption')?.value;
-      const selectedPokemon = buyOption === '1' ? [item.pokemon.name]
-      : this.evolutionOptions[item.pokemon.name].map((evo:any) => evo.name);
-      return {
-        pokemon: selectedPokemon,
-        quantity: this.pokemonSelections.at(index).get('quantity')?.value,
-      }
-    });
+    // Ambil isi cart saat ini satu kali (tanpa subscribe terus-menerus)
+    const items = await firstValueFrom(this.cartItems$);
+    if (items.length === 0) return;
+
+    const total = items.reduce((sum, item) => sum + item.pokemon.price * item.quantity, 0);
+    const cards = items.reduce((sum, item) => sum + item.quantity, 0);
+    const form = this.checkoutForm.getRawValue();
 
     const orderData = {
-      ...formValues,
-      pokemonToBuy,
-    }
+      ...form,
+      // Bentuk pokemonToBuy dipertahankan agar halaman Orders tetap bisa membacanya
+      pokemonToBuy: items.map(item => ({
+        pokemon: [item.pokemon.name],
+        quantity: item.quantity,
+        unitPrice: item.pokemon.price,
+      })),
+      total,
+      createdAt: new Date().toISOString(),
+    };
 
-
+    this.isSubmitting = true;
+    this.submitError = '';
     try {
       await this.dbService.saveFormSubmission(orderData);
-      this.formSubmitted = true;
+      this.placedOrder = { name: form.firstName, email: form.email, total, cards };
       this.store.dispatch(clearCart());
-    } catch (error) {
-      console.error('Error saving form submission:', error);
+      this.checkoutForm.reset();
+    } catch {
+      this.submitError = 'Your order could not be sent. Check your connection and try again.';
+    } finally {
+      this.isSubmitting = false;
     }
-
-  }
-
-  closeModal(e: Event){
-    e.preventDefault();
-    this.formSubmitted = false;
   }
 }

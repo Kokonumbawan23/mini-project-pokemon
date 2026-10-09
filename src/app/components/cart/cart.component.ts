@@ -1,9 +1,10 @@
-import { clearCart } from './../../state/cart/cart.action';
 import { Component } from '@angular/core';
-import { CartItem, CartState } from '../../state/cart/cart.state';
-import { select, Store } from '@ngrx/store';
-import { selectCartItem, selectCartItemCount, selectCartState } from '../../state/cart/cart.selector';
-import { removeCart } from '../../state/cart/cart.action';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs';
+import { CartItem } from '../../state/cart/cart.state';
+import { clearCart, removeCart, updateQuantity } from '../../state/cart/cart.action';
+import { selectCartItem, selectCartSubtotal, selectCartTotalQuantity } from '../../state/cart/cart.selector';
+import { RARITY_LABEL } from '../../shared/product';
 
 @Component({
   selector: 'app-cart',
@@ -13,19 +14,36 @@ import { removeCart } from '../../state/cart/cart.action';
   styleUrl: './cart.component.css'
 })
 export class CartComponent {
+  readonly maxQuantity = 99;
+  readonly rarityLabel = RARITY_LABEL;
 
-  cartItem$;
-  totalItem$;
-  constructor(private store:Store) {
-    this.cartItem$ = this.store.pipe(select(selectCartItem));
-    this.totalItem$ = this.store.pipe(select(selectCartItemCount));
+  cartItems$: Observable<CartItem[]>;
+  totalQuantity$: Observable<number>;
+  subtotal$: Observable<number>;
+
+  constructor(private store: Store) {
+    this.cartItems$ = this.store.select(selectCartItem);
+    this.totalQuantity$ = this.store.select(selectCartTotalQuantity);
+    this.subtotal$ = this.store.select(selectCartSubtotal);
   }
 
-  removeItem(pokemonName: string){
-    this.store.dispatch(removeCart({pokemonName}));
+  changeQuantity(item: CartItem, delta: number) {
+    const quantity = Math.min(this.maxQuantity, item.quantity + delta);
+    // quantity 0 akan menghapus item (diatur di reducer)
+    this.store.dispatch(updateQuantity({ pokemonName: item.pokemon.name, quantity }));
   }
 
-  clearCart(){
-    this.store.dispatch(clearCart());
+  removeItem(pokemonName: string) {
+    this.store.dispatch(removeCart({ pokemonName }));
+  }
+
+  clearCart() {
+    if (confirm('Remove all cards from your cart?')) {
+      this.store.dispatch(clearCart());
+    }
+  }
+
+  trackByName(_: number, item: CartItem) {
+    return item.pokemon.name;
   }
 }

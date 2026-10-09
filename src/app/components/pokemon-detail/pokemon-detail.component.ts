@@ -3,7 +3,9 @@ import { PokemonService } from './../../services/pokemon.service';
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { addCart } from '../../state/cart/cart.action';
-import { TcgCardData } from '../tcg-card/tcg-card.component';
+import { Observable, of } from 'rxjs';
+import { Product, productFromApi, RARITY_LABEL } from '../../shared/product';
+import { selectQuantityInCart } from '../../state/cart/cart.selector';
 
 @Component({
   selector: 'app-pokemon-detail',
@@ -20,7 +22,10 @@ export class PokemonDetailComponent implements OnInit{
     genus: string = '';
     description: string = '';
     totalStats: number = 0;
-    card: TcgCardData | null = null;
+    card: Product | null = null;
+    inCart$: Observable<number> = of(0);
+    addedLine: boolean = false;
+    readonly rarityLabel = RARITY_LABEL;
     addedToCart: boolean = false;
     showForm: boolean = false;
     isFormDirty: boolean = false;
@@ -83,8 +88,11 @@ export class PokemonDetailComponent implements OnInit{
         this.description = flavor.replace(/[\n\f\r]/g, ' ');
         this.totalStats = this.pokemon.stats.reduce((sum: number, s: any) => sum + s.base_stat, 0);
 
+        // Berapa kartu ini yang sudah ada di cart (ikut update otomatis lewat Store)
+        this.inCart$ = this.store.select(selectQuantityInCart(this.pokemon.name));
+
         this.card = {
-          ...this.toCard(this.pokemon),
+          ...productFromApi(this.pokemon),
           genus: this.genus,
           height: this.pokemon.height / 10,
           weight: this.pokemon.weight / 10,
@@ -96,19 +104,13 @@ export class PokemonDetailComponent implements OnInit{
         this.evolutionChain = await this.pokemonService.getEvolutions(this.species.evolution_chain.url);
         const stages = this.parseEvolutions(this.evolutionChain);
         const details = await Promise.all(stages.map(stage => this.pokemonService.getPokemonDetailsByName(stage.name)));
-        this.evolutions = stages.map((stage, i) => ({ ...stage, card: this.toCard(details[i]) }));
+        this.evolutions = stages.map((stage, i) => ({ ...stage, card: productFromApi(details[i]) }));
 
     }
 
-    /** Ubah respons PokeAPI jadi data kartu ukuran kecil */
-    private toCard(pokemon: any): TcgCardData {
-      return {
-        id: pokemon.id,
-        name: pokemon.name,
-        image: pokemon.sprites.other['official-artwork'].front_default ?? pokemon.sprites.front_default,
-        types: pokemon.types.map((t: any) => t.type.name),
-        hp: pokemon.stats.find((s: any) => s.stat.name === 'hp')?.base_stat,
-      };
+    /** Total harga semua kartu di rantai evolusi */
+    get evolutionLinePrice(): number {
+      return this.evolutions.reduce((sum, ev) => sum + ev.card.price, 0);
     }
 
     async selectPokemon(name: string) {
@@ -120,10 +122,19 @@ export class PokemonDetailComponent implements OnInit{
     }
 
     addToCart(){
-      this.store.dispatch(addCart({pokemon: this.pokemon, quantity: 1}));
+      if (!this.card) return;
+      this.store.dispatch(addCart({pokemon: this.card, quantity: 1}));
       // Feedback singkat di tombol supaya user tahu aksinya berhasil
       this.addedToCart = true;
       setTimeout(() => this.addedToCart = false, 1500);
+    }
+
+    addEvolutionLine(){
+      for (const ev of this.evolutions) {
+        this.store.dispatch(addCart({ pokemon: ev.card, quantity: 1 }));
+      }
+      this.addedLine = true;
+      setTimeout(() => this.addedLine = false, 1500);
     }
 
     closeFormEvent(status: boolean){

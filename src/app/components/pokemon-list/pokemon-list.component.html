@@ -74,6 +74,21 @@
         </fieldset>
 
         <fieldset>
+          <legend class="filter-label">Rarity</legend>
+          <div class="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              *ngFor="let r of rarities"
+              class="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-left text-sm font-bold transition-colors"
+              [ngClass]="selectedRarities.includes(r.value) ? 'border-ink bg-ink text-paper' : 'border-ink/15 hover:border-ink/40'"
+              [attr.aria-pressed]="selectedRarities.includes(r.value)"
+              (click)="toggleRarity(r.value)">
+              <span class="w-5 text-center" aria-hidden="true">{{ r.symbol }}</span>{{ r.label }}
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset>
           <legend class="filter-label">Number of types</legend>
           <div class="grid grid-cols-3 rounded-lg bg-ink/5 p-1">
             <button
@@ -109,6 +124,9 @@
       <div *ngIf="!showFilters && activeFilterCount" class="flex flex-wrap gap-1.5 lg:hidden">
         <button *ngFor="let t of selectedTypes" type="button" class="chip" (click)="toggleType(t)">
           {{ t | titlecase }} <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button *ngFor="let r of selectedRarities" type="button" class="chip" (click)="toggleRarity(r)">
+          {{ r | titlecase }} <i class="fa-solid fa-xmark"></i>
         </button>
         <button *ngIf="typeCount !== 'any'" type="button" class="chip" (click)="clearTypeCount()">
           {{ typeCount | titlecase }} type <i class="fa-solid fa-xmark"></i>
@@ -149,10 +167,11 @@
         <!-- Halaman binder: 9 kartu -->
         <ul *ngIf="!isLoading && filteredPokemon.length" class="binder__page" [ngClass]="'flip-' + flipDir">
           <li *ngFor="let pokemon of paginatedPokemon; let i = index" class="pocket" [style.--i]="i">
-            <a [routerLink]="['/pokemon/detail', pokemon.name]" class="pocket__link" [attr.aria-label]="pokemon.name | titlecase">
+            <a [routerLink]="['/pokemon/detail', pokemon.name]" class="pocket__link" [attr.aria-label]="(pokemon.name | titlecase) + ', ' + (pokemon.card.price | rupiah)">
               <app-tcg-card [card]="pokemon.card" [collectorTotal]="pokemonList.length">
                 <span *ngIf="sortBadge(pokemon) as badge" class="sort-badge">{{ badge }}</span>
               </app-tcg-card>
+              <span class="price-sticker">{{ pokemon.card.price | rupiah }}</span>
             </a>
           </li>
         </ul>

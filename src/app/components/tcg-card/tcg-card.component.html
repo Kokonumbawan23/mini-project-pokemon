@@ -35,7 +35,10 @@
 
       <footer class="tcg__foot">
         <span class="capitalize">{{ card.types.join(' / ') }}</span>
-        <span>{{ collectorNumber }}</span>
+        <span>
+          {{ collectorNumber }}
+          <abbr *ngIf="card.rarity" class="no-underline" [title]="rarityLabel[card.rarity]">{{ raritySymbol[card.rarity] }}</abbr>
+        </span>
       </footer>
     </div>
 

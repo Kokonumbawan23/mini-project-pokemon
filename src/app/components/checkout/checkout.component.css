@@ -1,0 +1,15 @@
+.field-label {
+  @apply mb-1.5 block font-display text-sm font-semibold text-ink/70;
+}
+
+.field {
+  @apply h-12 w-full rounded-lg border border-ink/15 bg-paper px-3 text-ink placeholder:text-ink/30 focus:border-binder focus:outline-none;
+}
+
+.field--error {
+  @apply border-pokered;
+}
+
+.field-error {
+  @apply mt-1.5 text-sm font-bold text-pokered;
+}

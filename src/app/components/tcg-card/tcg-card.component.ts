@@ -1,4 +1,6 @@
 import { Component, ElementRef, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Rarity, RARITY_LABEL, RARITY_SYMBOL } from '../../shared/product';
 
 /** Data yang dibutuhkan untuk menggambar satu kartu. Field opsional hanya tampil di ukuran 'lg'. */
 export interface TcgCardData {
@@ -12,11 +14,17 @@ export interface TcgCardData {
   weight?: number;   // dalam kilogram
   abilities?: string[];
   flavor?: string;
+  rarity?: Rarity;
 }
 
+/**
+ * Standalone supaya bisa dipakai di PokemonModule (binder, detail) dan AppModule (cart, checkout)
+ * tanpa harus membuat shared NgModule.
+ */
 @Component({
   selector: 'app-tcg-card',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './tcg-card.component.html',
   styleUrl: './tcg-card.component.css',
 })
@@ -33,6 +41,9 @@ export class TcgCardComponent {
   get primaryType(): string {
     return this.card.types[0] ?? 'normal';
   }
+
+  readonly raritySymbol = RARITY_SYMBOL;
+  readonly rarityLabel = RARITY_LABEL;
 
   get collectorNumber(): string {
     const no = String(this.card.id).padStart(3, '0');

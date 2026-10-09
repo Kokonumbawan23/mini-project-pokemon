@@ -4,8 +4,16 @@ import { addCart, removeCart, updateQuantity, clearCart } from './cart.action';
 
 export const loadInitialState = (): CartState => {
   if (typeof sessionStorage !== 'undefined') {
-    const storedState = sessionStorage.getItem('cart');
-    return storedState ? JSON.parse(storedState) : initialCartState;
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('cart') ?? 'null');
+      // Buang item dengan bentuk data lama (sebelum ada harga), supaya halaman tidak error
+      const items = Array.isArray(stored?.items)
+        ? stored.items.filter((item: any) => typeof item?.pokemon?.price === 'number')
+        : [];
+      return { items };
+    } catch {
+      return initialCartState;
+    }
   }
 
   return initialCartState;

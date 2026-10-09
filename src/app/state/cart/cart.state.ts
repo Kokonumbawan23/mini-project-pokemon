@@ -1,5 +1,7 @@
+import { Product } from '../../shared/product';
+
 export interface CartItem {
-  pokemon: any;
+  pokemon: Product;
   quantity: number;
 }
 

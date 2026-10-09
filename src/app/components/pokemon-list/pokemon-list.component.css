@@ -83,8 +83,26 @@
   background: rgb(255 255 255 / 0.14);
 }
 .pocket__link {
+  position: relative;
   display: block;
   border-radius: 0.5rem;
+}
+
+/* Stiker harga yang ditempel di plastik kantong, seperti di toko kartu */
+.price-sticker {
+  position: absolute;
+  left: -0.2rem;
+  top: 50%;
+  transform: rotate(-4deg);
+  border-radius: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  background: theme('colors.paper');
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  font-family: theme('fontFamily.display');
+  font-size: clamp(0.62rem, 1.6vw, 0.85rem);
+  font-weight: 800;
+  white-space: nowrap;
+  color: theme('colors.ink');
 }
 .pocket__empty {
   aspect-ratio: 63 / 88;

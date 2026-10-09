@@ -24,6 +24,8 @@ import { cartReducer } from './state/cart/cart.reducer';
 import { CheckoutComponent } from './components/checkout/checkout.component';
 import { RealtimeDatabaseService } from './services/realtime-database.service';
 import { PokemonService } from './services/pokemon.service';
+import { TcgCardComponent } from './components/tcg-card/tcg-card.component';
+import { RupiahPipe } from './shared/rupiah.pipe';
 
 @NgModule({
   declarations: [
@@ -40,6 +42,8 @@ import { PokemonService } from './services/pokemon.service';
     AppRoutingModule,
     FormsModule,
     ReactiveFormsModule,
+    TcgCardComponent,
+    RupiahPipe,
     StoreModule.forRoot(
       {
         cart: cartReducer,

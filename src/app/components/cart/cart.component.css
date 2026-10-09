@@ -1,0 +1,3 @@
+.stepper-btn {
+  @apply flex h-10 w-10 items-center justify-center text-sm text-ink/70 hover:text-ink disabled:pointer-events-none disabled:opacity-30;
+}

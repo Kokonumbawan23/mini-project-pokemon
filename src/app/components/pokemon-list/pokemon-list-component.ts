@@ -1,8 +1,8 @@
 import { Component, OnInit } from "@angular/core";
 import { PokemonService } from "../../services/pokemon.service";
-import { TcgCardData } from "../tcg-card/tcg-card.component";
+import { Product, productFromApi, Rarity, RARITY_LABEL, RARITY_SYMBOL } from "../../shared/product";
 
-type SortKey = 'id' | 'name' | 'total' | 'hp' | 'attack' | 'defense' | 'speed' | 'height' | 'weight';
+type SortKey = 'id' | 'name' | 'price' | 'total' | 'hp' | 'attack' | 'defense' | 'speed' | 'height' | 'weight';
 type TypeCount = 'any' | 'single' | 'dual';
 
 @Component({
@@ -23,6 +23,7 @@ export class PokemonListComponent implements OnInit {
   selectedTypes: string[] = [];
   typeCount: TypeCount = 'any';
   minTotal: number = 0;
+  selectedRarities: Rarity[] = [];
   sortKey: SortKey = 'id';
   sortDir: 'asc' | 'desc' = 'asc';
   showFilters: boolean = false;
@@ -32,6 +33,7 @@ export class PokemonListComponent implements OnInit {
   readonly sortOptions: { value: SortKey; label: string }[] = [
     { value: 'id', label: 'number' },
     { value: 'name', label: 'name' },
+    { value: 'price', label: 'price' },
     { value: 'total', label: 'total stats' },
     { value: 'hp', label: 'HP' },
     { value: 'attack', label: 'attack' },
@@ -40,6 +42,8 @@ export class PokemonListComponent implements OnInit {
     { value: 'height', label: 'height' },
     { value: 'weight', label: 'weight' },
   ];
+  readonly rarities: { value: Rarity; label: string; symbol: string }[] =
+    (['common', 'uncommon', 'rare', 'holo'] as Rarity[]).map(r => ({ value: r, label: RARITY_LABEL[r], symbol: RARITY_SYMBOL[r] }));
   readonly typeCountOptions: { value: TypeCount; label: string }[] = [
     { value: 'any', label: 'All' },
     { value: 'single', label: 'Single' },
@@ -78,14 +82,8 @@ export class PokemonListComponent implements OnInit {
           weight: details.weight,
           stats,
           total: details.stats.reduce((sum: number, s: any) => sum + s.base_stat, 0),
-          // Data siap pakai untuk <app-tcg-card>
-          card: {
-            id: details.id,
-            name: pokemon.name,
-            image: details.sprites.other['official-artwork'].front_default ?? details.sprites.front_default,
-            types: details.types.map((t: any) => t.type.name),
-            hp: stats['hp'],
-          } satisfies TcgCardData,
+          // Data kartu + harga, dipakai oleh <app-tcg-card> dan saat masuk ke cart
+          card: productFromApi(details) as Product,
         }
       })
     );
@@ -115,8 +113,9 @@ export class PokemonListComponent implements OnInit {
         (this.typeCount === 'single' && typeNames.length === 1) ||
         (this.typeCount === 'dual' && typeNames.length === 2);
       const matchesTotal = pokemon.total >= this.minTotal;
+      const matchesRarity = !this.selectedRarities.length || this.selectedRarities.includes(pokemon.card.rarity);
 
-      return matchesKeyword && matchesTypes && matchesTypeCount && matchesTotal;
+      return matchesKeyword && matchesTypes && matchesTypeCount && matchesTotal && matchesRarity;
     });
 
     this.filteredPokemon = this.sortPokemon(filtered);
@@ -136,6 +135,8 @@ export class PokemonListComponent implements OnInit {
         case 'height':
         case 'weight':
           return p[this.sortKey];
+        case 'price':
+          return p.card.price;
         default:
           return p.stats[this.sortKey];
       }
@@ -158,6 +159,7 @@ export class PokemonListComponent implements OnInit {
     switch (this.sortKey) {
       case 'id':
       case 'name':
+      case 'price': // harga sudah tampil di stiker
         return null;
       case 'total':
         return `BST ${pokemon.total}`;
@@ -184,6 +186,13 @@ export class PokemonListComponent implements OnInit {
     this.applyFilter();
   }
 
+  toggleRarity(rarity: Rarity){
+    this.selectedRarities = this.selectedRarities.includes(rarity)
+      ? this.selectedRarities.filter(r => r !== rarity)
+      : [...this.selectedRarities, rarity];
+    this.applyFilter();
+  }
+
   isTypeDisabled(type: string): boolean {
     return this.selectedTypes.length >= 2 && !this.selectedTypes.includes(type);
   }
@@ -194,7 +203,7 @@ export class PokemonListComponent implements OnInit {
   }
 
   get activeFilterCount(): number {
-    return this.selectedTypes.length + (this.typeCount !== 'any' ? 1 : 0) + (this.minTotal > 0 ? 1 : 0);
+    return this.selectedTypes.length + this.selectedRarities.length + (this.typeCount !== 'any' ? 1 : 0) + (this.minTotal > 0 ? 1 : 0);
   }
 
   get hasActiveCriteria(): boolean {
@@ -219,6 +228,7 @@ export class PokemonListComponent implements OnInit {
   resetAll(){
     this.filter = '';
     this.selectedTypes = [];
+    this.selectedRarities = [];
     this.typeCount = 'any';
     this.minTotal = 0;
     this.sortKey = 'id';

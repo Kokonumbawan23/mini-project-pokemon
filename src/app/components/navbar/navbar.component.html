@@ -12,7 +12,7 @@
         <span
           *ngIf="(cartItemCount$ | async) as count"
           class="ml-1 rounded-full bg-ink px-1.5 text-xs font-bold text-paper"
-          [attr.aria-label]="count + ' items'">
+          [attr.aria-label]="count + (count === 1 ? ' card' : ' cards')">
           {{ count }}
         </span>
       </a>
