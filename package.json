@@ -3,10 +3,15 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "env:generate": "node scripts/generate-environment.mjs",
+    "predev": "npm run env:generate",
     "dev": "ng serve",
+    "prebuild": "npm run env:generate",
     "build": "ng build",
     "start": "node dist/training-day-1/server/server.mjs",
+    "prewatch": "npm run env:generate",
     "watch": "ng build --watch --configuration development",
+    "pretest": "npm run env:generate",
     "test": "ng test"
   },
   "private": true,

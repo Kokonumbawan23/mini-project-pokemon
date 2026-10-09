@@ -40,3 +40,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Config environment berisi key/ID project: JANGAN di-commit (dibuat dari src/environment.template.ts)
+/src/environment.ts
+.env
+.env.*
+!.env.example

@@ -37,7 +37,8 @@ Belum ada lint/format script (tidak ada ESLint/Prettier di `package.json`).
 ```
 src/
 ├── main.ts / main.server.ts / server.ts   # entry browser, SSR, Express
-├── environment.ts                         # config Firebase (default export, satu file untuk semua env)
+├── environment.template.ts                # TEMPLATE config Firebase (placeholder, di-commit)
+├── environment.ts                         # DIBUAT OTOMATIS dari template + .env/variabel lingkungan; TIDAK di-commit
 └── app/
     ├── app.module.ts                      # root module: Store, Firebase, HttpClient, komponen shell
     ├── app-routing.module.ts              # route root
@@ -102,11 +103,21 @@ src/
 - Pesanan disimpan ke `formSubmissions` dengan `pokemonToBuy: [{ pokemon: [name], quantity, unitPrice }]`, `total`, `createdAt`.
 - `TcgCardComponent` dan `RupiahPipe` standalone: import ke NgModule, jangan dideklarasikan.
 
+## Config environment (jangan di-commit)
+
+- `src/environment.template.ts` adalah template (placeholder `__FIREBASE_...__`) dan di-commit. `src/environment.ts` dan `.env` ada di `.gitignore`.
+- `scripts/generate-environment.mjs` membuat `src/environment.ts` dari template. Sumber nilai: variabel lingkungan (Railway), lalu `.env` (lokal). Dijalankan otomatis oleh hook npm `predev`, `prebuild`, `prewatch`, `pretest`; manual: `npm run env:generate`.
+- Variabel wajib belum lengkap dan `src/environment.ts` sudah ada → skrip memakai file itu (nyaman untuk lokal). File belum ada → gagal dengan daftar variabel. Nilai dengan tanda kutip/spasi/backslash ditolak.
+- Setup clone baru: salin `.env.example` menjadi `.env`, isi nilainya, jalankan `npm run dev`.
+- Memanggil `ng build`/`ng serve` langsung (tanpa npm) melewati hook, jadi jalankan `npm run env:generate` dulu.
+- Jangan men-stage atau commit `src/environment.ts`/`.env`, jangan memakai `git add -f` untuk keduanya, dan jangan menaruh nilai asli di template.
+
 ## Deployment (Railway)
 
 - Railway (Railpack) menjalankan `npm run build`, lalu `npm start`. Tidak ada file konfigurasi Railway di repo (`railway.json` sudah deprecated untuk service baru).
 - Versi Node dipin di `.nvmrc` (22). Angular CLI 19.0.4 mendukung Node ≥ 22. Railpack hanya mendukung versi LTS yang masih aktif.
-- Server (`src/server.ts`) membaca `process.env['PORT']`; tidak ada variabel lingkungan lain yang dibutuhkan (config Firebase web bersifat publik dan ada di `src/environment.ts`).
+- Server (`src/server.ts`) membaca `process.env['PORT']`.
+- Isi **Variables** di Railway dengan 7 variabel `FIREBASE_*` yang wajib (nama dan contoh ada di `.env.example`; `FIREBASE_MEASUREMENT_ID` opsional) SEBELUM build pertama. Tanpa itu build sengaja gagal dengan daftar variabel yang kurang, supaya tidak ada deploy dengan config kosong.
 - Cache: file ber-hash (JS/CSS) `max-age=1y`; semua HTML (prerender maupun SSR) `no-cache` supaya deploy baru langsung terlihat. Jangan mengubah `index.html` menjadi di-cache lama.
 - Setelah dapat domain Railway: tambahkan ke Firebase Console > Authentication > Settings > Authorized domains.
 - Uji lokal seperti Railway: `npm run build`, lalu `PORT=4100 npm start`.
@@ -128,7 +139,7 @@ src/
 ## Hal yang perlu diwaspadai
 
 - `app.module.ts` masih meng-import `CvModule`, padahal folder `src/app/cv/` sudah dihapus di working tree → **build gagal** sampai import itu dibersihkan.
-- `src/environment.ts` berisi config Firebase dan ter-commit. API key web Firebase memang bukan rahasia, tapi keamanan bergantung penuh pada Firebase Security Rules.
+- Config Firebase tidak boleh masuk git (lihat bagian Config environment). Ingat: nilainya tetap terkirim ke browser di dalam bundle JS, jadi yang benar-benar melindungi data adalah Firebase Security Rules dan pembatasan API key di Google Cloud Console. Config project lama sudah terlanjur ada di riwayat git publik.
 - Beberapa komponen pakai `export default` (`FormSubmission*`, `PokemonForms`), sisanya named export.
 - Nama file `pokemon-list-component.ts` (tanda hubung, bukan titik) tidak mengikuti pola Angular.
 - Banyak tipe `any` untuk data Pokémon; belum ada interface model.
