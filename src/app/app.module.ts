@@ -5,7 +5,8 @@ import {
   withEventReplay,
 } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { firebaseAuthInterceptor } from './interceptors/firebase-auth.interceptor';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { AppRoutingModule } from './app-routing.module';
@@ -67,7 +68,7 @@ import { RupiahPipe } from './shared/rupiah.pipe';
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([firebaseAuthInterceptor])),
   ],
   bootstrap: [AppComponent],
 })

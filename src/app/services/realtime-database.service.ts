@@ -32,10 +32,17 @@ export class RealtimeDatabaseService {
     }
   }
 
-  async getFormSubmissions(): Promise<any> {
+  /**
+   * Pesanan milik satu user saja. Query ini butuh ".indexOn": ["userId"]
+   * di Security Rules (lihat database.rules.json di root proyek).
+   */
+  async getFormSubmissions(userId: string): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.http.get(`${this.databaseUrl}.json`)
+        this.http.get(`${this.databaseUrl}.json`, {
+          // REST API Firebase meminta nilai query dalam format JSON, jadi pakai tanda kutip
+          params: { orderBy: '"userId"', equalTo: JSON.stringify(userId) },
+        })
       );
       return response || {};
     } catch (error) {

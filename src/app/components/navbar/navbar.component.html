@@ -18,6 +18,9 @@
       </a>
     </nav>
 
+    <span *ngIf="userEmail$ | async as email" class="hidden max-w-[16rem] truncate text-sm text-ink/60 md:block" [title]="email">
+      {{ email }}
+    </span>
     <button type="button" class="nav-link" (click)="logout()" aria-label="Log out">
       <i class="fa-solid fa-arrow-right-from-bracket"></i>
       <span class="hidden sm:inline">Log out</span>

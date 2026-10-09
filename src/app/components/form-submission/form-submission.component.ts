@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { RealtimeDatabaseService } from "../../services/realtime-database.service";
 import { PokemonService } from "../../services/pokemon.service";
+import { AuthService } from "../../services/auth.service";
 import { Order, orderCardCount, orderPokemonNames, ordersFromFirebase, quantityPerPokemon } from "../../shared/order";
 import { Product, productFromApi } from "../../shared/product";
 
@@ -22,13 +23,25 @@ export default class FormSubmissionComponent implements OnInit{
   readonly cardCount = orderCardCount;
   readonly skeletons = Array(3);
 
-  constructor(private dbService: RealtimeDatabaseService, private pokemonService: PokemonService) {}
+  constructor(
+    private dbService: RealtimeDatabaseService,
+    private pokemonService: PokemonService,
+    private authService: AuthService,
+  ) {}
 
   async ngOnInit() {
     try {
-      this.orders = ordersFromFirebase(await this.dbService.getFormSubmissions());
-    } catch {
-      this.loadError = 'Orders could not be loaded. Check your connection and refresh the page.';
+      const user = await this.authService.currentUser();
+      if (!user) return; // authGuard sudah memastikan ini tidak terjadi
+      this.orders = ordersFromFirebase(await this.dbService.getFormSubmissions(user.uid));
+    } catch (error: any) {
+      // Firebase menolak query "orderBy userId" kalau rules belum punya index untuk field itu
+      const message = String(error?.error?.error ?? '');
+      this.loadError = message.includes('Index not defined')
+        ? "Orders can't be loaded yet: the database rules need an index on userId. Publish database.rules.json in the Firebase console."
+        : error?.status === 401
+          ? "You don't have permission to see these orders. Log out and log in again."
+          : 'Orders could not be loaded. Check your connection and refresh the page.';
     } finally {
       this.isLoading = false;
     }

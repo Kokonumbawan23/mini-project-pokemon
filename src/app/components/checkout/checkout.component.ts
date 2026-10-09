@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Observable, firstValueFrom } from 'rxjs';
 import { RealtimeDatabaseService } from '../../services/realtime-database.service';
+import { AuthService } from '../../services/auth.service';
 import { CartItem } from '../../state/cart/cart.state';
 import { clearCart } from '../../state/cart/cart.action';
 import { selectCartItem, selectCartSubtotal, selectCartTotalQuantity } from '../../state/cart/cart.selector';
@@ -14,7 +15,7 @@ import { selectCartItem, selectCartSubtotal, selectCartTotalQuantity } from '../
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.css'
 })
-export class CheckoutComponent {
+export class CheckoutComponent implements OnInit {
   cartItems$: Observable<CartItem[]>;
   totalQuantity$: Observable<number>;
   subtotal$: Observable<number>;
@@ -33,10 +34,19 @@ export class CheckoutComponent {
     address: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(10)] }),
   });
 
-  constructor(private dbService: RealtimeDatabaseService, private store: Store) {
+  constructor(private dbService: RealtimeDatabaseService, private store: Store, private authService: AuthService) {
     this.cartItems$ = this.store.select(selectCartItem);
     this.totalQuantity$ = this.store.select(selectCartTotalQuantity);
     this.subtotal$ = this.store.select(selectCartSubtotal);
+  }
+
+  async ngOnInit() {
+    // Isi email dengan email akun, kalau user belum mengetik apa pun
+    const user = await this.authService.currentUser();
+    const email = this.checkoutForm.controls.email;
+    if (user?.email && !email.value) {
+      email.setValue(user.email);
+    }
   }
 
   /** true kalau field sudah disentuh dan tidak valid, untuk menampilkan pesan error */
@@ -53,7 +63,8 @@ export class CheckoutComponent {
 
     // Ambil isi cart saat ini satu kali (tanpa subscribe terus-menerus)
     const items = await firstValueFrom(this.cartItems$);
-    if (items.length === 0) return;
+    const user = await this.authService.currentUser();
+    if (items.length === 0 || !user) return;
 
     const total = items.reduce((sum, item) => sum + item.pokemon.price * item.quantity, 0);
     const cards = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -61,6 +72,8 @@ export class CheckoutComponent {
 
     const orderData = {
       ...form,
+      // Pemilik pesanan: dipakai untuk query "pesanan saya" dan oleh Security Rules
+      userId: user.uid,
       // Bentuk pokemonToBuy dipertahankan agar halaman Orders tetap bisa membacanya
       pokemonToBuy: items.map(item => ({
         pokemon: [item.pokemon.name],

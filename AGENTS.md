@@ -52,7 +52,8 @@ src/
     │   └── form-submission/               # → /form-submission, /form-submission/:id/edit (SubmissionModule)
     ├── module/{pokemon,submission}/       # feature NgModule (lazy-loaded)
     ├── route/                             # routing module milik feature module
-    ├── guards/                            # AuthGuard (cek sessionStorage 'user'), FormGuard (canDeactivate)
+    ├── guards/                            # authGuard & guestGuard (functional, cek Firebase Auth), FormGuard (canDeactivate)
+    ├── interceptors/                      # firebaseAuthInterceptor: tempel ?auth=<idToken> ke request Realtime DB
     ├── services/                          # PokemonService (axios), AuthService, RealtimeDatabaseService
     ├── shared/                            # product.ts (Product, harga & rarity), rupiah.pipe.ts (standalone)
     ├── state/cart/                        # action, reducer, selector, state (+ CartStateModule yang tidak dipakai)
@@ -63,7 +64,7 @@ src/
 
 ```
 /auth                         AuthComponent
-/  (AuthGuard, HomeLayoutComponent)
+/  (authGuard, HomeLayoutComponent)    '' → redirect ke pokemon
 ├── cart                      CartComponent
 ├── checkout                  CheckoutComponent
 ├── pokemon        (lazy)     PokemonListComponent
@@ -72,11 +73,14 @@ src/
     └── :id/edit              FormSubmissionEditComponent [FormGuard]
 ```
 
-Tidak ada route `''` → redirect dan tidak ada wildcard `**`; membuka `/` hanya menampilkan sidebar kosong.
+`/auth` dijaga `guestGuard` (user yang sudah login diarahkan ke `/pokemon`). URL tak dikenal (`**`) diarahkan ke `/pokemon`.
 
 ### Alur data
 
-- **Session**: `AuthService` menyimpan `{email, uid}` ke `sessionStorage['user']`. `AuthGuard` hanya mengecek key itu ada — bukan status Firebase Auth.
+- **Session**: sumber kebenaran adalah Firebase Auth (`AuthService.user$`, `currentUser()`). Jangan menyimpan user ke sessionStorage.
+- **Guard di server**: `authGuard` mengembalikan `false` saat SSR/prerender (tidak ada sesi), sehingga halaman terlindungi di-render kosong lalu dicek ulang di browser.
+- **Akses data**: request ke Realtime DB otomatis membawa token lewat interceptor; aturan akses ada di `database.rules.json` (harus di-publish manual di Firebase Console > Realtime Database > Rules).
+- **Pesanan per user**: checkout menyimpan `userId`; Orders memakai query `orderBy="userId"&equalTo="<uid>"`. Pesanan lama tanpa `userId` tidak bisa diakses lagi setelah rules di-publish.
 - **Cart**: reducer membaca/menulis `sessionStorage['cart']` langsung di dalam reducer (side effect).
 - **Order**: `CheckoutComponent` dan `PokemonFormsComponent` sama-sama `POST` ke `formSubmissions` di Realtime DB, dengan bentuk data berbeda.
 

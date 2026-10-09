@@ -11,6 +11,7 @@ export interface OrderLine {
 
 export interface Order {
   id: string;
+  userId?: string;   // pesanan lama belum punya pemilik
   firstName: string;
   lastName: string;
   email: string;

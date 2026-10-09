@@ -1,46 +1,44 @@
-import { Injectable, NgZone } from '@angular/core';
-import { inject } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import {
   Auth,
+  User,
+  authState,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signOut,
 } from '@angular/fire/auth';
+import { Observable } from 'rxjs';
 import { RealtimeDatabaseService } from './realtime-database.service';
 
+/**
+ * Sumber kebenaran status login adalah Firebase Auth (bukan sessionStorage).
+ * Firebase menyimpan sesi sendiri, jadi user tetap login setelah refresh.
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private auth: Auth = inject(Auth);
 
+  /** Emit user yang sedang login, atau null. Ikut berubah saat login/logout. */
+  readonly user$: Observable<User | null> = authState(this.auth);
+
   constructor(
     private realtimeDatabaseService: RealtimeDatabaseService,
     private ngZone: NgZone
   ) {}
 
-  private isSessionStorageAvailable(): boolean {
-    try {
-      return typeof window !== 'undefined' && !!window.sessionStorage;
-    } catch {
-      return false;
-    }
+  /** User saat ini, setelah Firebase selesai memulihkan sesi dari penyimpanan browser */
+  async currentUser(): Promise<User | null> {
+    await this.auth.authStateReady();
+    return this.auth.currentUser;
   }
 
   async login(email: string, password: string): Promise<void> {
     try {
-      const userCredential = await this.ngZone.runOutsideAngular(() =>
+      await this.ngZone.runOutsideAngular(() =>
         signInWithEmailAndPassword(this.auth, email, password)
       );
-
-      const userData = {
-        email: userCredential.user.email,
-        uid: userCredential.user.uid,
-      };
-
-      if (this.isSessionStorageAvailable()) {
-        sessionStorage.setItem('user', JSON.stringify(userData));
-      }
-
     } catch (error: any) {
       // Service tidak menampilkan UI; komponen yang memutuskan pesan untuk user
       console.error('Login Error:', error);
@@ -54,38 +52,18 @@ export class AuthService {
         createUserWithEmailAndPassword(this.auth, email, password)
       );
 
-      const userData = {
+      await this.realtimeDatabaseService.saveUser(userCredential.user.uid, {
         email: userCredential.user.email,
         uid: userCredential.user.uid,
         registeredAt: new Date().toISOString(),
-      };
-
-      await this.realtimeDatabaseService.saveUser(
-        userCredential.user.uid,
-        userData
-      );
-
-      if (this.isSessionStorageAvailable()) {
-        sessionStorage.setItem('user', JSON.stringify(userData));
-      }
-
+      });
     } catch (error: any) {
       console.error('Registration Error:', error);
       throw error;
     }
   }
 
-  logout(): void {
-    if (this.isSessionStorageAvailable()) {
-      sessionStorage.removeItem('user');
-    }
-  }
-
-  getUser(): any {
-    if (!this.isSessionStorageAvailable()) {
-      return null;
-    }
-    const user = sessionStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+  async logout(): Promise<void> {
+    await signOut(this.auth);
   }
 }
