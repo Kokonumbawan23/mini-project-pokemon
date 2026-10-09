@@ -2,8 +2,17 @@ import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { CartItem } from '../../state/cart/cart.state';
-import { clearCart, removeCart, updateQuantity } from '../../state/cart/cart.action';
-import { selectCartItem, selectCartSubtotal, selectCartTotalQuantity } from '../../state/cart/cart.selector';
+import {
+  clearCart,
+  removeCart,
+  updateQuantity,
+} from '../../state/cart/cart.action';
+import {
+  selectCartItem,
+  selectCartSubtotal,
+  selectCartTotalQuantity,
+  selectMostExpensiveItem,
+} from '../../state/cart/cart.selector';
 import { RARITY_LABEL } from '../../shared/product';
 
 @Component({
@@ -11,7 +20,7 @@ import { RARITY_LABEL } from '../../shared/product';
   standalone: false,
 
   templateUrl: './cart.component.html',
-  styleUrl: './cart.component.css'
+  styleUrl: './cart.component.css',
 })
 export class CartComponent {
   readonly maxQuantity = 99;
@@ -20,17 +29,20 @@ export class CartComponent {
   cartItems$: Observable<CartItem[]>;
   totalQuantity$: Observable<number>;
   subtotal$: Observable<number>;
-
+  expensiveItem$: Observable<string>;
   constructor(private store: Store) {
     this.cartItems$ = this.store.select(selectCartItem);
     this.totalQuantity$ = this.store.select(selectCartTotalQuantity);
     this.subtotal$ = this.store.select(selectCartSubtotal);
+    this.expensiveItem$ = this.store.select(selectMostExpensiveItem);
   }
 
   changeQuantity(item: CartItem, delta: number) {
     const quantity = Math.min(this.maxQuantity, item.quantity + delta);
     // quantity 0 akan menghapus item (diatur di reducer)
-    this.store.dispatch(updateQuantity({ pokemonName: item.pokemon.name, quantity }));
+    this.store.dispatch(
+      updateQuantity({ pokemonName: item.pokemon.name, quantity }),
+    );
   }
 
   removeItem(pokemonName: string) {
