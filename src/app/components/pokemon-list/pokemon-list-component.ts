@@ -1,6 +1,9 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
+import { Component, DestroyRef, ElementRef, HostListener, OnInit, ViewChild, inject } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { ActivatedRoute, ParamMap, Router } from "@angular/router";
 import { PokemonService } from "../../services/pokemon.service";
 import { CartActionsService } from "../../services/cart-actions.service";
+import { BinderStateService } from "../../services/binder-state.service";
 import { Product, productFromApi, Rarity, RARITY_LABEL, RARITY_SYMBOL } from "../../shared/product";
 
 type SortKey = 'id' | 'name' | 'price' | 'total' | 'hp' | 'attack' | 'defense' | 'speed' | 'height' | 'weight';
@@ -61,6 +64,14 @@ export class PokemonListComponent implements OnInit {
 
   @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
 
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  private binderState = inject(BinderStateService);
+  /** Kriteria filter terakhir yang ditampilkan, untuk menentukan arah animasi */
+  private lastCriteria = '';
+  private lastPage = 1;
+
   constructor(private pokemonService: PokemonService, private cartActions: CartActionsService) {
   }
 
@@ -91,18 +102,69 @@ export class PokemonListComponent implements OnInit {
       })
     );
     this.isLoading = false;
-    this.applyFilter();
+    this.runPipeline();
   }
 
   async ngOnInit() {
+    // URL adalah sumber kebenaran: setiap kali query params berubah (klik filter,
+    // tombol Back, refresh, atau link yang dibagikan), baca ulang state lalu tampilkan.
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        this.readStateFromUrl(params);
+        this.binderState.lastQueryParams = this.route.snapshot.queryParams;
+        if (!this.isLoading) this.runPipeline();
+      });
+
     await this.fetchPokemon();
+  }
+
+  // --- Sinkronisasi state ↔ URL ---
+
+  /** Isi state komponen dari query params, dengan validasi (URL bisa diketik sembarangan) */
+  private readStateFromUrl(params: ParamMap) {
+    const get = (key: string) => params.get(key) ?? '';
+    const list = (key: string) => get(key).split(',').filter(Boolean);
+
+    this.filter = get('q');
+    this.selectedTypes = list('type').filter(t => this.elements.includes(t)).slice(0, 2);
+    this.selectedRarities = list('rarity').filter((r): r is Rarity => this.rarities.some(o => o.value === r));
+    this.typeCount = this.typeCountOptions.find(o => o.value === get('count'))?.value ?? 'any';
+    const min = Math.round(Number(get('min')) / 10) * 10;
+    this.minTotal = Number.isFinite(min) ? Math.min(Math.max(min, 0), this.maxTotal) : 0;
+    this.sortKey = this.sortOptions.find(o => o.value === get('sort'))?.value ?? 'id';
+    this.sortDir = get('dir') === 'desc' ? 'desc' : 'asc';
+    this.currentPage = Math.max(1, parseInt(get('page'), 10) || 1);
+  }
+
+  /**
+   * Tulis state saat ini ke URL. Nilai default tidak ditulis, supaya URL tetap pendek.
+   * replaceUrl: tidak menambah entri history di setiap ketikan; tombol Back tetap
+   * kembali ke halaman sebelumnya (mis. dari detail kembali ke binder dengan filter yang sama).
+   */
+  updateUrl(page = 1) {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      replaceUrl: true,
+      queryParams: {
+        // Jangan di-trim: nilai ini dibaca balik ke kolom search, spasi yang sedang diketik harus tetap ada
+        q: this.filter || null,
+        type: this.selectedTypes.join(',') || null,
+        rarity: this.selectedRarities.join(',') || null,
+        count: this.typeCount !== 'any' ? this.typeCount : null,
+        min: this.minTotal > 0 ? this.minTotal : null,
+        sort: this.sortKey !== 'id' ? this.sortKey : null,
+        dir: this.sortDir !== 'asc' ? this.sortDir : null,
+        page: page > 1 ? page : null,
+      },
+    });
   }
 
   /**
    * Pipeline: filter → sort → paginate.
-   * Dipanggil setiap kali salah satu input search/filter/sort berubah.
+   * Dijalankan setiap kali URL berubah, dan sekali setelah data selesai dimuat.
    */
-  applyFilter():void{
+  private runPipeline():void{
     const keyword = this.filter.trim().toLowerCase();
 
     const filtered = this.pokemonList.filter(pokemon => {
@@ -122,9 +184,18 @@ export class PokemonListComponent implements OnInit {
     });
 
     this.filteredPokemon = this.sortPokemon(filtered);
-    this.flipDir = 'none';
-    this.currentPage = 1;
     this.totalPage = Math.max(1, Math.ceil(this.filteredPokemon.length / this.itemsPerPage));
+    // Halaman dari URL bisa melebihi jumlah halaman (mis. link lama); batasi
+    this.currentPage = Math.min(this.currentPage, this.totalPage);
+
+    // Animasi balik halaman hanya kalau kriterianya sama dan yang berubah cuma halaman
+    const criteria = JSON.stringify([keyword, this.selectedTypes, this.selectedRarities, this.typeCount, this.minTotal, this.sortKey, this.sortDir]);
+    this.flipDir = criteria !== this.lastCriteria || this.currentPage === this.lastPage
+      ? 'none'
+      : this.currentPage > this.lastPage ? 'next' : 'prev';
+    this.lastCriteria = criteria;
+    this.lastPage = this.currentPage;
+
     this.paginate();
   }
 
@@ -186,14 +257,14 @@ export class PokemonListComponent implements OnInit {
       // Pokémon maksimal punya 2 tipe, jadi lebih dari 2 pasti hasilnya kosong
       this.selectedTypes = [...this.selectedTypes, type];
     }
-    this.applyFilter();
+    this.updateUrl();
   }
 
   toggleRarity(rarity: Rarity){
     this.selectedRarities = this.selectedRarities.includes(rarity)
       ? this.selectedRarities.filter(r => r !== rarity)
       : [...this.selectedRarities, rarity];
-    this.applyFilter();
+    this.updateUrl();
   }
 
   isTypeDisabled(type: string): boolean {
@@ -202,7 +273,7 @@ export class PokemonListComponent implements OnInit {
 
   toggleSortDir(){
     this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-    this.applyFilter();
+    this.updateUrl();
   }
 
   get activeFilterCount(): number {
@@ -215,17 +286,17 @@ export class PokemonListComponent implements OnInit {
 
   clearKeyword(){
     this.filter = '';
-    this.applyFilter();
+    this.updateUrl();
   }
 
   clearTypeCount(){
     this.typeCount = 'any';
-    this.applyFilter();
+    this.updateUrl();
   }
 
   clearMinTotal(){
     this.minTotal = 0;
-    this.applyFilter();
+    this.updateUrl();
   }
 
   resetAll(){
@@ -236,7 +307,7 @@ export class PokemonListComponent implements OnInit {
     this.minTotal = 0;
     this.sortKey = 'id';
     this.sortDir = 'asc';
-    this.applyFilter();
+    this.updateUrl();
   }
 
   // --- Cart ---
@@ -274,17 +345,13 @@ export class PokemonListComponent implements OnInit {
 
   nextPage(){
     if(this.currentPage < this.totalPage){
-      this.flipDir = 'next';
-      this.currentPage++;
-      this.paginate();
+      this.updateUrl(this.currentPage + 1);
     }
   }
 
   previousPage(){
     if(this.currentPage > 1){
-      this.flipDir = 'prev';
-      this.currentPage--;
-      this.paginate();
+      this.updateUrl(this.currentPage - 1);
     }
   }
 }

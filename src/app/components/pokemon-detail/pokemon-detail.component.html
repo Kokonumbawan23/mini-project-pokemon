@@ -1,6 +1,6 @@
 <div *ngIf="pokemon && card" class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12" [ngClass]="'type-' + card.types[0]">
   <nav class="flex flex-wrap items-center justify-between gap-3" aria-label="Pokémon navigation">
-    <a routerLink="/pokemon" class="inline-flex items-center gap-2 font-display font-semibold text-ink/60 hover:text-ink">
+    <a routerLink="/pokemon" [queryParams]="binderState.lastQueryParams" class="inline-flex items-center gap-2 font-display font-semibold text-ink/60 hover:text-ink">
       <i class="fa-solid fa-chevron-left text-sm"></i> Back to binder
     </a>
     <div class="flex items-center gap-2">

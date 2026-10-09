@@ -21,13 +21,13 @@
             class="field w-full pl-9"
             placeholder="Name or number"
             [(ngModel)]="filter"
-            (ngModelChange)="applyFilter()" />
+            (ngModelChange)="updateUrl()" />
         </label>
 
         <div class="flex gap-2">
           <label class="flex-1">
             <span class="sr-only">Sort by</span>
-            <select class="field w-full" [(ngModel)]="sortKey" (ngModelChange)="applyFilter()">
+            <select class="field w-full" [(ngModel)]="sortKey" (ngModelChange)="updateUrl()">
               <option *ngFor="let opt of sortOptions" [ngValue]="opt.value">Sort by {{ opt.label }}</option>
             </select>
           </label>
@@ -98,7 +98,7 @@
               class="rounded-md py-1.5 text-sm font-bold transition-colors"
               [ngClass]="typeCount === opt.value ? 'bg-paper shadow-sm' : 'text-ink/60 hover:text-ink'"
               [attr.aria-pressed]="typeCount === opt.value"
-              (click)="typeCount = opt.value; applyFilter()">
+              (click)="typeCount = opt.value; updateUrl()">
               {{ opt.label }}
             </button>
           </div>
@@ -117,7 +117,7 @@
             [max]="maxTotal"
             step="10"
             [(ngModel)]="minTotal"
-            (ngModelChange)="applyFilter()" />
+            (ngModelChange)="updateUrl()" />
         </div>
       </div>
 

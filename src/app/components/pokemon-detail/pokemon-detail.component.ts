@@ -3,6 +3,7 @@ import { PokemonService } from './../../services/pokemon.service';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { CartActionsService } from '../../services/cart-actions.service';
+import { BinderStateService } from '../../services/binder-state.service';
 import { Observable, of } from 'rxjs';
 import { Product, productFromApi, RARITY_LABEL } from '../../shared/product';
 import { selectQuantityInCart } from '../../state/cart/cart.selector';
@@ -48,6 +49,7 @@ export class PokemonDetailComponent implements OnInit{
     private router: Router,
     private store:Store,
     private cartActions: CartActionsService,
+    readonly binderState: BinderStateService,
     ) {}
 
     async ngOnInit() {
