@@ -1,6 +1,6 @@
 # Mini App Pokemon
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.4.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.4. Intended for studying Angular 19 from basic, but extended into AI Agentic learning subjects.
 
 ## Development server
 
