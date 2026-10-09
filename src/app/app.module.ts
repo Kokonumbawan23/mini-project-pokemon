@@ -17,7 +17,7 @@ import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import environment from '../environment';
 import { Auth, getAuth, provideAuth } from '@angular/fire/auth';
-import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
 import { CartComponent } from './components/cart/cart.component';
 import { Store, StoreModule } from '@ngrx/store';
 import { cartReducer } from './state/cart/cart.reducer';
@@ -31,7 +31,7 @@ import { PokemonService } from './services/pokemon.service';
     TitlecasePipe,
     HomeLayoutComponent,
     AuthComponent,
-    SidebarComponent,
+    NavbarComponent,
     CartComponent,
     CheckoutComponent,
   ],

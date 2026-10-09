@@ -2,3 +2,59 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-sleeve font-body text-ink antialiased;
+  }
+
+  /* Fokus keyboard yang jelas di semua elemen interaktif */
+  :focus-visible {
+    outline: 3px solid theme('colors.gold');
+    outline-offset: 2px;
+  }
+}
+
+/*
+ * Warna tipe Pokémon (satu sumber untuk semua komponen).
+ * Pakai: class="type-fire" untuk mengisi --type-color, lalu elemen di dalamnya memakai var(--type-color).
+ * Ditulis sebagai CSS biasa (bukan class Tailwind) karena nama class-nya dibentuk
+ * secara dinamis di template ('type-' + nama), dan Tailwind tidak bisa mendeteksinya.
+ */
+.type-normal   { --type-color: #a8a77a; }
+.type-fire     { --type-color: #ee8130; }
+.type-water    { --type-color: #6390f0; }
+.type-electric { --type-color: #f7d02c; }
+.type-grass    { --type-color: #7ac74c; }
+.type-ice      { --type-color: #96d9d6; }
+.type-fighting { --type-color: #c22e28; }
+.type-poison   { --type-color: #a33ea1; }
+.type-ground   { --type-color: #e2bf65; }
+.type-flying   { --type-color: #a98ff3; }
+.type-psychic  { --type-color: #f95587; }
+.type-bug      { --type-color: #a6b91a; }
+.type-rock     { --type-color: #b6a136; }
+.type-ghost    { --type-color: #735797; }
+.type-dragon   { --type-color: #6f35fc; }
+.type-dark     { --type-color: #705746; }
+.type-steel    { --type-color: #b7b7ce; }
+.type-fairy    { --type-color: #d685ad; }
+
+@layer components {
+  /* Judul dengan Archivo versi lebar (Expanded), mirip nama di kartu TCG */
+  .font-wide {
+    @apply font-display;
+    font-stretch: 125%;
+  }
+
+  /* Pil tipe: titik warna + nama, huruf biasa (bukan kapital semua) */
+  .type-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-paper py-0.5 pl-1 pr-2.5 text-sm font-bold capitalize text-ink ring-1 ring-ink/10;
+  }
+  .type-badge::before {
+    content: '';
+    @apply h-3.5 w-3.5 rounded-full;
+    background-color: var(--type-color, #9ca3af);
+    box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.18);
+  }
+}

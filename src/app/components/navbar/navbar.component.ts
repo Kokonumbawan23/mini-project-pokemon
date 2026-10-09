@@ -5,13 +5,13 @@ import { Observable } from 'rxjs';
 import { selectCartItemCount } from '../../state/cart/cart.selector';
 
 @Component({
-  selector: 'app-sidebar',
+  selector: 'app-navbar',
   standalone: false,
 
-  templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.css'
+  templateUrl: './navbar.component.html',
+  styleUrl: './navbar.component.css'
 })
-export class SidebarComponent {
+export class NavbarComponent {
 
   cartItemCount$: Observable<number>;
 

@@ -1,0 +1,47 @@
+<article
+  class="tcg"
+  [ngClass]="['type-' + primaryType, 'tcg--' + size]"
+  [class.tcg--interactive]="interactive"
+  (pointermove)="onPointerMove($event)"
+  (pointerleave)="onPointerLeave()">
+  <div class="tcg__frame">
+    <div class="tcg__panel">
+      <header class="tcg__head">
+        <h3 class="tcg__name font-wide">{{ card.name | titlecase }}</h3>
+        <span *ngIf="card.hp" class="tcg__hp"><small>HP</small>{{ card.hp }}</span>
+        <span class="tcg__energy" aria-hidden="true"></span>
+      </header>
+
+      <div class="tcg__art">
+        <img [src]="card.image" [alt]="card.name" [attr.loading]="size === 'sm' ? 'lazy' : null" />
+      </div>
+
+      <ng-container *ngIf="size === 'lg'">
+        <p class="tcg__strip">
+          {{ collectorNumber }}<ng-container *ngIf="card.genus">&ensp;{{ card.genus }}</ng-container>
+          <ng-container *ngIf="card.height">&ensp;HT: {{ card.height }} m</ng-container>
+          <ng-container *ngIf="card.weight">&ensp;WT: {{ card.weight }} kg</ng-container>
+        </p>
+
+        <ul *ngIf="card.abilities?.length" class="tcg__abilities">
+          <li *ngFor="let ability of card.abilities">
+            <span class="tcg__ability-tag">Ability</span>
+            <span class="font-wide">{{ ability | titlecase }}</span>
+          </li>
+        </ul>
+
+        <p *ngIf="card.flavor" class="tcg__flavor">{{ card.flavor }}</p>
+      </ng-container>
+
+      <footer class="tcg__foot">
+        <span class="capitalize">{{ card.types.join(' / ') }}</span>
+        <span>{{ collectorNumber }}</span>
+      </footer>
+    </div>
+
+    <div *ngIf="interactive" class="tcg__holo" aria-hidden="true"></div>
+
+    <!-- Slot untuk konten tambahan dari parent (mis. nilai sort, nanti: harga) -->
+    <div class="tcg__slot"><ng-content></ng-content></div>
+  </div>
+</article>

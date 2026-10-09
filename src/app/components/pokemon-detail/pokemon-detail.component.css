@@ -1,0 +1,25 @@
+.section-title {
+  @apply mb-4 mt-12 font-display text-2xl font-extrabold;
+  font-stretch: 125%;
+}
+
+/* Bar stat memakai warna tipe utama (dari class type-* di elemen pembungkus halaman) */
+.stat-track {
+  @apply h-2 overflow-hidden rounded-full bg-ink/10;
+}
+.stat-bar {
+  @apply h-full rounded-full;
+  background-color: var(--type-color, theme('colors.binder'));
+}
+
+/* Kartu evolusi: yang sedang dibuka diberi garis biru binder */
+.evo-link {
+  @apply block rounded-[7%] transition-opacity;
+}
+.evo-link:not(.is-current) {
+  @apply opacity-80 hover:opacity-100;
+}
+.evo-link.is-current {
+  outline: 3px solid theme('colors.binder');
+  outline-offset: 3px;
+}

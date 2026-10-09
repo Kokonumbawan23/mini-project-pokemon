@@ -1,0 +1,173 @@
+/*
+ * Kartu TCG.
+ * Semua ukuran di dalam kartu memakai satuan cqw (1cqw = 1% lebar kartu),
+ * jadi proporsinya sama persis di binder (kecil) maupun di halaman detail (besar).
+ */
+.tcg {
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 63 / 88; /* rasio kartu Pokémon asli: 63 × 88 mm */
+}
+
+.tcg__frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 4.5cqw;
+  padding: 3.2cqw;
+  background: linear-gradient(160deg, #f9dc6e 0%, #f4c73b 45%, #dcaa22 100%);
+  box-shadow: 0 0.4cqw 1.2cqw rgb(15 23 42 / 0.35);
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s ease-out;
+}
+
+.tcg__panel {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 2cqw;
+  overflow: hidden;
+  border-radius: 2cqw;
+  padding: 2.5cqw 3cqw;
+  background: color-mix(in srgb, var(--type-color, #c9c9c9) 34%, #fff);
+}
+
+/* --- Header: nama, HP, energi --- */
+.tcg__head {
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+}
+.tcg__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 7.6cqw;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.tcg__hp {
+  font-family: Archivo, sans-serif;
+  font-size: 7cqw;
+  font-weight: 800;
+  line-height: 1;
+}
+.tcg__hp small {
+  margin-right: 0.6cqw;
+  font-size: 3.4cqw;
+  font-weight: 700;
+}
+.tcg__energy {
+  flex: none;
+  width: 7cqw;
+  height: 7cqw;
+  border-radius: 50%;
+  background: var(--type-color, #9ca3af);
+  box-shadow: inset 0 -0.9cqw 0 rgb(0 0 0 / 0.22), 0 0 0 0.7cqw #fff;
+}
+
+/* --- Jendela artwork dengan bingkai bevel emas --- */
+.tcg__art {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  border: 1cqw solid;
+  border-color: #fbe08a #c8961c #c8961c #fbe08a;
+  background: radial-gradient(circle at 50% 62%, #fff 0%, color-mix(in srgb, var(--type-color, #c9c9c9) 60%, #fff) 72%);
+}
+.tcg__art img {
+  width: 82%;
+  height: 92%;
+  object-fit: contain;
+  filter: drop-shadow(0 1.5cqw 1cqw rgb(0 0 0 / 0.25));
+}
+
+/* --- Bagian khusus ukuran besar --- */
+.tcg__strip {
+  border-radius: 1cqw;
+  padding: 0.8cqw 2cqw;
+  background: rgb(255 255 255 / 0.6);
+  font-size: 3.3cqw;
+  font-style: italic;
+  text-align: center;
+}
+.tcg__abilities {
+  display: grid;
+  gap: 1.2cqw;
+  font-size: 4.4cqw;
+  font-weight: 700;
+}
+.tcg__abilities li {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+}
+.tcg__ability-tag {
+  border-radius: 1cqw;
+  padding: 0.3cqw 1.6cqw;
+  background: #20243a;
+  color: #fff;
+  font-size: 3cqw;
+  font-style: italic;
+}
+.tcg__flavor {
+  margin-top: auto;
+  border-top: 0.3cqw solid rgb(0 0 0 / 0.15);
+  padding-top: 1.5cqw;
+  font-size: 3.3cqw;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* --- Footer: tipe & nomor koleksi --- */
+.tcg__foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  font-size: 3.5cqw;
+  font-weight: 700;
+  opacity: 0.7;
+}
+.tcg__flavor + .tcg__foot {
+  margin-top: 0;
+}
+
+/* --- Kilau holo (hanya kartu interaktif) --- */
+.tcg__holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: color-dodge;
+  opacity: calc(var(--holo, 0) * 0.85);
+  background: linear-gradient(
+    115deg,
+    transparent 22%,
+    rgb(255 80 180 / 0.45) 36%,
+    rgb(80 230 255 / 0.45) 46%,
+    rgb(255 240 90 / 0.45) 56%,
+    transparent 72%
+  );
+  background-size: 260% 260%;
+  background-position: var(--mx, 50%) var(--my, 50%);
+  transition: opacity 0.3s;
+}
+.tcg--interactive .tcg__frame {
+  transition: transform 0.08s linear;
+}
+
+/* --- Slot konten dari parent --- */
+.tcg__slot {
+  position: absolute;
+  top: 54%;
+  right: 6cqw;
+}
+
+/* Hormati pengaturan "kurangi animasi" di OS */
+@media (prefers-reduced-motion: reduce) {
+  .tcg__frame {
+    transform: none !important;
+    transition: none !important;
+  }
+}

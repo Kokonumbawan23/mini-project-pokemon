@@ -1,58 +1,173 @@
-<div class="p-6 rounded-lg shadow-lg min-h-screen">
-  <h1 class="text-4xl font-bold my-8 text-gray-800">Pokemon List</h1>
-  <div class="container mx-auto p-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-    <input type="text" class="border border-gray-300 rounded-md p-2 w-full col-span-3" placeholder="Search Pokemon" [(ngModel)]="filter" (ngModelChange)="applyFilter()">
-    <select class="border border-gray-300 rounded-md w-full" [(ngModel)]="selectedElement" (ngModelChange)="applyFilter()">
-      <option value="">Select Element</option>
-      <option *ngFor="let element of elements" [value]="element">
-        {{ element }}
-      </option>
-    </select>
-  </div>
+<div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+  <div class="grid gap-8 lg:grid-cols-[260px_1fr] lg:gap-12">
 
-  <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    <li *ngFor="let pokemon of paginatedPokemon">
-      <div class="max-w-sm rounded overflow-hidden shadow-lg bg-white p-6 hover:bg-gray-200" (click)="selectPokemon(pokemon.url)">
-        <img class="w-3/5 mx-auto" [src]="pokemon.image" alt="Pokemon Image">
-        <div class="py-4">
-          <div class="font-bold text-xl mb-2 text-center">{{ pokemon.name | titlecase }}</div>
-        </div>
-        <div class="flex gap-2 justify-center">
-          <span class="bg-gray-200 rounded-full px-4 py-2 text-sm font-bold text-gray-700 mb-2 "># {{ pokemon.id }}</span>
-          <span
-          *ngFor="let element of pokemon.elements"
-          class=" rounded-full px-4 py-2 text-sm font-bold text-white mb-2 text-center"
-            [ngClass]="{
-            'bg-gray-700': element.type.name === 'normal',
-              'bg-red-500': element.type.name === 'fire',
-              'bg-blue-500': element.type.name === 'water',
-              'bg-green-500': element.type.name === 'grass',
-              'bg-green-800': element.type.name === 'bug',
-              'bg-yellow-500': element.type.name === 'electric',
-              'bg-yellow-800': element.type.name === 'rock',
-              'bg-purple-500': element.type.name === 'psychic',
-            'bg-purple-800': element.type.name === 'poison',
-              'bg-pink-500': element.type.name === 'fairy',
-              'bg-yellow-200': element.type.name === 'ground',
-              'bg-black': element.type.name === 'dark',
-              'bg-blue-200': element.type.name === 'flying',
-              'bg-red-800': element.type.name === 'fighting',
-              'bg-gray-600': element.type.name === 'steel',
-              'bg-purple-950': element.type.name === 'dragon',
-              'bg-purple-900': element.type.name === 'ghost',
-            }"
-          >{{ element.type.name | titlecase }}</span>
+    <!-- ===== Kontrol: search, sort, filter ===== -->
+    <aside class="space-y-6">
+      <div>
+        <h1 class="font-wide text-4xl font-black leading-none">Pokédex</h1>
+        <p class="mt-2 text-ink/60">
+          <ng-container *ngIf="!isLoading">{{ filteredPokemon.length }} of {{ pokemonList.length }} Pokémon</ng-container>
+          <ng-container *ngIf="isLoading">Loading your binder…</ng-container>
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <label class="relative block">
+          <span class="sr-only">Search Pokémon</span>
+          <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink/40"></i>
+          <input
+            type="search"
+            class="field w-full pl-9"
+            placeholder="Name or number"
+            [(ngModel)]="filter"
+            (ngModelChange)="applyFilter()" />
+        </label>
+
+        <div class="flex gap-2">
+          <label class="flex-1">
+            <span class="sr-only">Sort by</span>
+            <select class="field w-full" [(ngModel)]="sortKey" (ngModelChange)="applyFilter()">
+              <option *ngFor="let opt of sortOptions" [ngValue]="opt.value">Sort by {{ opt.label }}</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="field w-11 shrink-0 px-0 text-center hover:bg-paper"
+            [attr.aria-label]="sortDir === 'asc' ? 'Ascending order' : 'Descending order'"
+            [title]="sortDir === 'asc' ? 'Ascending' : 'Descending'"
+            (click)="toggleSortDir()">
+            <i class="fa-solid" [ngClass]="sortDir === 'asc' ? 'fa-arrow-up-short-wide' : 'fa-arrow-down-wide-short'"></i>
+          </button>
         </div>
       </div>
-    </li>
-  </ul>
 
-  <div class="flex justify-center items-center gap-4 mt-4">
-    <button class="bg-gray-200 border border-solid border-gray-300 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" (click)="previousPage()">Previous</button>
-    <span>Page <b>{{ currentPage }}</b> of <b>{{ totalPage }}</b></span>
-    <button class="bg-gray-200 border border-solid border-gray-300 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" (click)="nextPage()">Next</button>
+      <!-- Tombol buka/tutup filter: hanya di layar kecil -->
+      <button
+        type="button"
+        class="flex w-full items-center justify-between font-display font-semibold lg:hidden"
+        [attr.aria-expanded]="showFilters"
+        (click)="showFilters = !showFilters">
+        <span>Filters<span *ngIf="activeFilterCount"> ({{ activeFilterCount }})</span></span>
+        <i class="fa-solid" [ngClass]="showFilters ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+
+      <!-- Panel filter: selalu tampil di desktop -->
+      <div class="space-y-6 lg:block" [class.hidden]="!showFilters">
+        <fieldset>
+          <legend class="filter-label">Type <span class="font-normal text-ink/50">(up to two)</span></legend>
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              *ngFor="let element of elements"
+              class="type-badge transition-opacity disabled:cursor-not-allowed disabled:opacity-30"
+              [ngClass]="[
+                'type-' + element,
+                selectedTypes.includes(element) ? 'ring-2 ring-ink' : '',
+                selectedTypes.length && !selectedTypes.includes(element) ? 'opacity-50 hover:opacity-100' : ''
+              ]"
+              [disabled]="isTypeDisabled(element)"
+              [attr.aria-pressed]="selectedTypes.includes(element)"
+              (click)="toggleType(element)">
+              {{ element }}
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="filter-label">Number of types</legend>
+          <div class="grid grid-cols-3 rounded-lg bg-ink/5 p-1">
+            <button
+              type="button"
+              *ngFor="let opt of typeCountOptions"
+              class="rounded-md py-1.5 text-sm font-bold transition-colors"
+              [ngClass]="typeCount === opt.value ? 'bg-paper shadow-sm' : 'text-ink/60 hover:text-ink'"
+              [attr.aria-pressed]="typeCount === opt.value"
+              (click)="typeCount = opt.value; applyFilter()">
+              {{ opt.label }}
+            </button>
+          </div>
+        </fieldset>
+
+        <div>
+          <label for="min-total" class="filter-label flex justify-between">
+            <span>Minimum total stats</span>
+            <span class="tabular-nums text-ink">{{ minTotal }}</span>
+          </label>
+          <input
+            id="min-total"
+            type="range"
+            class="w-full accent-binder"
+            min="0"
+            [max]="maxTotal"
+            step="10"
+            [(ngModel)]="minTotal"
+            (ngModelChange)="applyFilter()" />
+        </div>
+      </div>
+
+      <!-- Ringkasan filter saat panel tertutup (layar kecil) -->
+      <div *ngIf="!showFilters && activeFilterCount" class="flex flex-wrap gap-1.5 lg:hidden">
+        <button *ngFor="let t of selectedTypes" type="button" class="chip" (click)="toggleType(t)">
+          {{ t | titlecase }} <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button *ngIf="typeCount !== 'any'" type="button" class="chip" (click)="clearTypeCount()">
+          {{ typeCount | titlecase }} type <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button *ngIf="minTotal > 0" type="button" class="chip" (click)="clearMinTotal()">
+          Total {{ minTotal }}+ <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <button
+        *ngIf="hasActiveCriteria"
+        type="button"
+        class="font-display font-semibold text-binder underline decoration-gold decoration-2 underline-offset-4 hover:decoration-binder"
+        (click)="resetAll()">
+        Clear search and filters
+      </button>
+    </aside>
+
+    <!-- ===== Binder ===== -->
+    <section class="mx-auto w-full max-w-[660px] lg:mx-0" aria-label="Pokémon cards">
+      <div class="binder">
+        <div class="binder__rings" aria-hidden="true"><span></span><span></span><span></span></div>
+
+        <!-- Loading: kantong kosong berdenyut -->
+        <ul *ngIf="isLoading" class="binder__page">
+          <li *ngFor="let s of skeletons" class="pocket"><div class="pocket__empty animate-pulse"></div></li>
+        </ul>
+
+        <!-- Tidak ada hasil -->
+        <div *ngIf="!isLoading && filteredPokemon.length === 0" class="binder__empty">
+          <p class="font-wide text-xl font-bold">No cards match</p>
+          <p class="mt-1 text-paper/70">Try another name, or remove a filter.</p>
+          <button type="button" class="mt-4 rounded-lg bg-gold px-4 py-2 font-display font-bold text-ink" (click)="resetAll()">
+            Clear search and filters
+          </button>
+        </div>
+
+        <!-- Halaman binder: 9 kartu -->
+        <ul *ngIf="!isLoading && filteredPokemon.length" class="binder__page" [ngClass]="'flip-' + flipDir">
+          <li *ngFor="let pokemon of paginatedPokemon; let i = index" class="pocket" [style.--i]="i">
+            <a [routerLink]="['/pokemon/detail', pokemon.name]" class="pocket__link" [attr.aria-label]="pokemon.name | titlecase">
+              <app-tcg-card [card]="pokemon.card" [collectorTotal]="pokemonList.length">
+                <span *ngIf="sortBadge(pokemon) as badge" class="sort-badge">{{ badge }}</span>
+              </app-tcg-card>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Balik halaman -->
+      <nav *ngIf="!isLoading && filteredPokemon.length" class="mt-5 flex items-center justify-center gap-4" aria-label="Binder pages">
+        <button type="button" class="page-btn" [disabled]="currentPage === 1" (click)="previousPage()" aria-label="Previous page">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="font-display font-semibold tabular-nums">Page {{ currentPage }} of {{ totalPage }}</span>
+        <button type="button" class="page-btn" [disabled]="currentPage === totalPage" (click)="nextPage()" aria-label="Next page">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </nav>
+    </section>
   </div>
-
-  <app-pokemon-card [pokemon]="selectedPokemon" *ngIf="selectedPokemon" (click)="closeModal($event)"></app-pokemon-card>
-
 </div>

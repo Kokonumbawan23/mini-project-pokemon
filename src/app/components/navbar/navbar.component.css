@@ -1,0 +1,12 @@
+.nav-link {
+  @apply relative flex h-16 items-center gap-2 px-2 font-display font-semibold text-ink/60 transition-colors hover:text-ink sm:px-3;
+}
+
+/* Garis emas di bawah menu yang aktif — warna yang sama dengan bingkai kartu */
+.nav-link.is-active {
+  @apply text-ink;
+}
+.nav-link.is-active::after {
+  content: '';
+  @apply absolute inset-x-2 bottom-0 h-1 rounded-t bg-gold;
+}
