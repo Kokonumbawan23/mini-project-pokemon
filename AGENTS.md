@@ -22,11 +22,13 @@ Aplikasi Angular 19 untuk menjelajah Pokémon (data dari [PokeAPI](https://pokea
 ## Perintah
 
 ```bash
-npm start                         # ng serve → http://localhost:4200
-npm run build                     # build production (SSR + prerender) ke dist/training-day-1
-npm test                          # Karma
-npm run serve:ssr:training-day-1  # jalankan hasil build SSR → http://localhost:4000
+npm run dev    # ng serve (development) → http://localhost:4200
+npm run build  # build production (SSR + prerender) ke dist/training-day-1
+npm start      # JALANKAN HASIL BUILD: node dist/training-day-1/server/server.mjs → http://localhost:4000 (atau $PORT)
+npm test       # Karma
 ```
+
+`start` sengaja menjalankan server production (konvensi Railway dan kebanyakan PaaS: `build` lalu `start`). Untuk development pakai `npm run dev`. `npm start` mengharuskan `npm run build` dijalankan lebih dulu.
 
 Belum ada lint/format script (tidak ada ESLint/Prettier di `package.json`).
 
@@ -99,6 +101,15 @@ src/
 - Cart menyimpan `Product` (bukan respons API mentah) di `sessionStorage['cart']`; item tanpa `price` dibuang saat load.
 - Pesanan disimpan ke `formSubmissions` dengan `pokemonToBuy: [{ pokemon: [name], quantity, unitPrice }]`, `total`, `createdAt`.
 - `TcgCardComponent` dan `RupiahPipe` standalone: import ke NgModule, jangan dideklarasikan.
+
+## Deployment (Railway)
+
+- Railway (Railpack) menjalankan `npm run build`, lalu `npm start`. Tidak ada file konfigurasi Railway di repo (`railway.json` sudah deprecated untuk service baru).
+- Versi Node dipin di `.nvmrc` (22). Angular CLI 19.0.4 mendukung Node ≥ 22. Railpack hanya mendukung versi LTS yang masih aktif.
+- Server (`src/server.ts`) membaca `process.env['PORT']`; tidak ada variabel lingkungan lain yang dibutuhkan (config Firebase web bersifat publik dan ada di `src/environment.ts`).
+- Cache: file ber-hash (JS/CSS) `max-age=1y`; semua HTML (prerender maupun SSR) `no-cache` supaya deploy baru langsung terlihat. Jangan mengubah `index.html` menjadi di-cache lama.
+- Setelah dapat domain Railway: tambahkan ke Firebase Console > Authentication > Settings > Authorized domains.
+- Uji lokal seperti Railway: `npm run build`, lalu `PORT=4100 npm start`.
 
 ## Performa
 

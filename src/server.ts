@@ -26,12 +26,22 @@ const commonEngine = new CommonEngine();
 
 /**
  * Serve static files from /browser
+ *
+ * File JS/CSS punya hash di namanya (main-ABC123.js), jadi aman di-cache 1 tahun:
+ * isi baru = nama baru. HTML tidak boleh ikut di-cache lama, karena setelah deploy
+ * ia harus menunjuk ke nama file yang baru. "no-cache" = boleh disimpan, tapi
+ * browser wajib bertanya ke server dulu apakah masih valid (ETag).
  */
 app.get(
   '**',
   express.static(browserDistFolder, {
     maxAge: '1y',
-    index: 'index.html'
+    index: 'index.html',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
   }),
 );
 
@@ -49,7 +59,11 @@ app.get('**', (req, res, next) => {
       publicPath: browserDistFolder,
       providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
     })
-    .then((html) => res.send(html))
+    .then((html) => {
+      // Sama seperti HTML statis di atas: selalu validasi ulang setelah deploy
+      res.setHeader('Cache-Control', 'no-cache');
+      res.send(html);
+    })
     .catch((err) => next(err));
 });
 

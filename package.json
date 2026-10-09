@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "dev": "ng serve",
     "build": "ng build",
+    "start": "node dist/training-day-1/server/server.mjs",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "serve:ssr:training-day-1": "node dist/training-day-1/server/server.mjs"
+    "test": "ng test"
   },
   "private": true,
   "dependencies": {
