@@ -26,6 +26,10 @@ export const selectCartSubtotal = createSelector(selectCartItem, (items) =>
 export const selectMostExpensiveItem = createSelector(
   selectCartItem,
   (items) => {
+    if (items.length === 0) {
+      return 'Nothing in cart';
+    }
+
     const expensiveItem = items.reduce((maxItem, item) =>
       item.pokemon.price > maxItem.pokemon.price ? item : maxItem,
     );
